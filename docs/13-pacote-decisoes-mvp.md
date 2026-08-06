@@ -26,29 +26,36 @@
 | DEC-010 | Ciclo técnico de retenção aprovado (`retention_until`, expurgo, auditoria sem imagem); **prazo NÃO definido** | ⚠️ PARCIAL | `SubmittedImage`, expurgo | **Sim** (prazo/base legal) — **bloqueia lançamento com fotos** |
 | DEC-017 | Faixa etária | ⏳ PENDENTE | bloqueio de lançamento | **Sim** |
 
-> ⚠️ **Este documento não aprova nada.** Ele reúne **opções**, **trade-offs** e
-> **recomendações NÃO APROVADAS** para que o orquestrador decida. Nenhuma
-> recomendação aqui é `CONFIRMADO`/`RESOLVIDO`. Marcações usadas:
-> `OPÇÃO`, `HIPÓTESE`, `RECOMENDAÇÃO NÃO APROVADA`,
-> `DEPENDE DE DECISÃO DO ORQUESTRADOR`, `DEPENDE DE REVISÃO JURÍDICA`.
+## Estado inicial do pacote — histórico
+
+> 🕓 **Seção histórica.** O texto abaixo descreve o **estado inicial** do
+> documento, **antes** da resposta do orquestrador — **não representa o estado
+> atual**. É preservado apenas para rastreabilidade, junto das matrizes de
+> análise em cada decisão.
 >
-> **Nota (6 ago 2026):** o parágrafo acima descreve o estado **inicial** do
-> documento e é mantido como histórico. As decisões já tomadas estão na tabela
-> desta seção e anotadas em cada decisão como `DECISÃO DO ORQUESTRADOR`.
+> > ⚠️ *(histórico)* "Este documento não aprova nada. Ele reúne opções,
+> > trade-offs e recomendações NÃO APROVADAS para que o orquestrador decida."
+>
+> **Estado atual:** as decisões de produto **estão resolvidas** (ver a tabela
+> acima). DEC-002, DEC-010 e DEC-018 são **parciais** (jurídico pendente) e
+> DEC-017 é **jurídica**. O **modelo físico está desbloqueado
+> documentalmente**, embora o **lançamento com fotografias** siga **bloqueado
+> juridicamente** (retenção/consentimento). As matrizes originais permanecem
+> como histórico.
 
 ## Finalidade
 
-Destravar o **modelo físico de dados** e o início das funcionalidades do jogador,
-oferecendo ao orquestrador um conjunto de decisões conscientes sobre regras de
-produto e domínio do MVP.
+Destravar o **modelo físico de dados** e o início das funcionalidades do jogador.
+As decisões conscientes de produto já foram tomadas (ver tabela) e reconciliadas
+nos demais documentos.
 
 ## Escopo
 
 Cobre as decisões: identificação da criança (DEC-001), responsável (DEC-002) e
 consentimento (DEC-018), pontuação (DEC-003), desempate (DEC-004), expiração
-(DEC-009), retenção de fotografias (DEC-010) e pular desafio (DEC-008). Trata,
-em seção separada e **sem resolver**, decisões relacionadas não bloqueantes
-agora (DEC-005, DEC-006, DEC-016, DEC-017, DEC-014, DEC-015).
+(DEC-009), retenção de fotografias (DEC-010), pular desafio (DEC-008) e
+cardinalidades de conteúdo (DEC-005/006). DEC-017 (faixa etária) permanece
+jurídica.
 
 ## Fontes analisadas
 
@@ -182,8 +189,8 @@ Escolhida a **Opção B** (coincide com a recomendação). Regras aprovadas:
   disponível.
 
 ### Consequências de não decidir
-Bloqueia `Player` e, por consequência, `GameSession`, `PlayerAnswer`,
-`ScoreTransaction` e ranking — ou seja, o modelo físico inteiro do jogador.
+*(Histórico — já resolvido.)* Sem esta decisão, `Player` e tudo que depende dele
+(`GameSession`, `PlayerAnswer`, `ScoreTransaction`, ranking) ficariam bloqueados.
 
 ### Pergunta para o orquestrador
 Ver formulário, item 1.
@@ -327,17 +334,24 @@ preservando histórico); **resposta rejeitada = 0**; **idempotência** (uma
 **Opção A (pontos fixos por resposta aprovada)** — coincide com a recomendação.
 - **valor padrão do MVP: `10` pontos**, **configurável**; a **rodada guarda uma
   cópia (snapshot)** do valor vigente na criação;
-- só aprovação concede pontos; **rejeitada = 0**; concessão **após validação
-  administrativa**; **sem** tempo/velocidade/dificuldade no MVP;
-- **idempotência:** `evaluation_id` é a chave de idempotência conceitual — uma
-  avaliação não produz a mesma concessão duas vezes;
-- **Reavaliação:** **nunca** alterar/apagar uma transação antiga. Reversão de
-  aprovação cria uma **transação compensatória negativa** (preservando a
-  original), registrando **motivo, autor e data**; o ranking é recalculado pela
-  **soma das transações válidas**.
+- só aprovação concede pontos; **rejeição inicial não gera transação**;
+  concessão **após validação administrativa**; **sem** tempo/velocidade/
+  dificuldade no MVP;
+- **Modelo de avaliação por eventos** (resolve a contradição anterior): a
+  `Evaluation` é o **agregado**; cada decisão/revisão é um **`EvaluationEvent`
+  append-only**; cada `ScoreTransaction` referencia um **`evaluation_event_id`**,
+  que é a **chave de idempotência** — **um evento produz no máximo uma
+  transação**;
+- **Efeitos por evento:** aprovação inicial `+points_per_approval`; reversão
+  (aprovada→rejeitada) `-points_per_approval`; nova aprovação posterior
+  `+points_per_approval`;
+- **Reavaliação:** **nunca** alterar/apagar transações; eventos anteriores são
+  imutáveis; o ranking (denso) deriva da **soma** das transações positivas e
+  negativas.
 
 ### Consequências de não decidir
-Bloqueia `ScoreTransaction`, o cálculo e o ranking.
+*(Histórico — já resolvido.)* Sem esta decisão, `EvaluationEvent`,
+`ScoreTransaction`, o cálculo e o ranking ficariam bloqueados.
 
 ### Pergunta para o orquestrador
 Ver formulário, item 4.
@@ -393,8 +407,8 @@ identificador (apenas último critério técnico).
 - **não** criar campo `tiebreaker` no modelo apenas para isso.
 
 ### Consequências de não decidir
-Ranking sem ordenação estável; paginação inconsistente; testes de ranking sem
-oráculo.
+*(Histórico — já resolvido.)* Sem esta decisão, o ranking ficaria sem ordenação
+estável e sem oráculo para testes.
 
 ### Pergunta para o orquestrador
 Ver formulário, item 5.
@@ -483,8 +497,8 @@ anterior. Comportamento por estado:
   infantil e **não punitiva**.
 
 ### Consequências de não decidir
-Bloqueia os **estados** de `GameSession` e `PlayerAnswer` (logo o enum de status
-no modelo físico) e os testes de expiração/idempotência.
+*(Histórico — já resolvido.)* Sem esta decisão, os **estados** de `GameSession`
+e `PlayerAnswer` e os testes de expiração/idempotência ficariam bloqueados.
 
 ### Pergunta para o orquestrador
 Ver formulário, item 6.
@@ -633,7 +647,7 @@ Ver formulário, item 8.
 | DEC-001 | Player e tudo que depende dele | `Player` | Não |
 | DEC-002/018 | Gate de foto; consentimento | `Guardian`, `ConsentRecord` | Não (para liberar upload) |
 | DEC-009 | Estados de sessão/resposta | `GameSession`, `SessionChallenge`, `PlayerAnswer` | Não |
-| DEC-003 | Concessão de pontos | `ScoreTransaction`, `Evaluation` | Não |
+| DEC-003 | Concessão de pontos | `Evaluation`, `EvaluationEvent`, `ScoreTransaction` | Não |
 | DEC-004 | Ordenação do ranking | ranking (projeção), `ScoreTransaction` | Não |
 | DEC-010 | Política de expurgo | `SubmittedImage`, auditoria | Parcial (inicia sem prazo) |
 | DEC-008 | Estado "pulado" | `SessionChallenge`, `PlayerAnswer` | Parcial |
@@ -655,40 +669,36 @@ flowchart TD
 
 ---
 
-## 8. Proposta mínima de modelo conceitual (condicionada às recomendações)
+## 8. Proposta mínima de modelo conceitual (decisões registradas)
 
-> **Sem Prisma, sem tipos/tabelas/índices/migrations/APIs finais.** Condicionada
-> às recomendações **não aprovadas** acima.
+> **Sem Prisma, sem tipos/tabelas/índices/migrations/APIs finais.** Reflete as
+> decisões registradas; o detalhamento conceitual está em
+> [07 — Modelo de dados inicial](07-modelo-de-dados-inicial.md).
 
-- **Player** — finalidade: identidade do jogador. Existência: **obrigatória**.
-  Dados mínimos: `id` (UUID interno), `apelido` (público), `codigo_acesso`
-  (se DEC-001=B). **Não coletar:** nome completo, e-mail da criança, documentos.
-  Relacionamentos: 1..N `GameSession`. Pode mudar com DEC-001.
-- **Guardian** — finalidade: responsável para consentimento. Existência:
-  **condicional** (DEC-002). Dados mínimos: `id`, meio de contato. **Não
-  coletar:** dados além do necessário à finalidade. Relacionamentos: 1..N
-  `Player` (e talvez N..N). Pode mudar com DEC-002/018 e revisão jurídica.
-- **ConsentRecord** — finalidade: registro de consentimento. Existência:
-  **condicional/recomendada** (DEC-018). Dados: `versao_termo`, `data`,
-  `origem`, referência ao `Guardian`/evento. Relacionamentos: liga consentimento
-  ao escopo (criança/evento). `DEPENDE DE REVISÃO JURÍDICA`.
-- **GameSession** — rodada; **obrigatória**. Dados: `id`, `player_id`,
-  `configuracao` usada, `status`, `expires_at`. Estados dependem de DEC-009.
-- **SessionChallenge** — desafio na rodada; **obrigatória**. Dados: `id`,
-  `session_id`, `riddle_id`, `posicao`, estado (inclui "pulado" se DEC-008).
-- **PlayerAnswer** — resposta; **obrigatória**. Dados: `answer_text` (guardado
-  mesmo incorreto), `status` (rascunho/enviada/em avaliação; estados por DEC-009).
-- **SubmittedImage** — fotografia; **obrigatória para envio** (foto obrigatória).
-  Dados: `storage_key` (privado), `content_type`, `size`, ciclo de vida por
-  DEC-010. **Nunca** URL pública.
-- **Evaluation** — avaliação humana; **obrigatória**. Dados: `result`,
-  `admin_user_id`, `decided_at`, auditável (alterações registradas).
-- **ScoreTransaction** — pontos; **obrigatória**. Dados: `player_id`,
-  `evaluation_id` (idempotência), `points`. Forma depende de DEC-003.
-- **RankingEntry (projeção)** — derivada de `ScoreTransaction`; ordenação por
-  DEC-004.
-- **AuditLog** — trilha de ações administrativas; **recomendada**; nunca guarda a
-  imagem em si.
+- **Player** — identidade do jogador. `id` (UUID interno), `nickname` (público),
+  `public_tag` (opcional), `access_code_hash`, `status`, `guardian_id`
+  (opcional até o gate de mídia). **Não coletar:** nome completo, e-mail/senha da
+  criança, documento, nascimento, idade.
+- **AuthIdentity** — autenticação de contas adultas (e-mail/Google), separada do
+  domínio; sem token de provedor persistido indevidamente.
+- **Guardian** — responsável **persistente**; contato mínimo; 1:N com crianças.
+- **ConsentRecord** — **append-only** (`action`, `versao_termo`, `data`,
+  `origem`, `escopo`, responsável); estado vigente derivado do histórico.
+  `DEPENDE DE REVISÃO JURÍDICA`.
+- **GameSession** — rodada; guarda **snapshots** (`points_per_approval`,
+  `upload_grace_seconds`, quantidade e tempo). Estados por DEC-009.
+- **SessionChallenge** — estados conceituais (inclui `pulado`, DEC-008).
+- **PlayerAnswer** — `answer_text` (guardado mesmo incorreto); estados
+  `rascunho`/`completa`/`enviada`/`preservada_apos_expiracao`/`em_avaliacao`.
+- **SubmittedImage** — **obrigatória para envio**; `storage_key` privado; ciclo
+  de vida e retenção (`retention_until`, expurgo); prazo jurídico pendente.
+- **Evaluation** — **agregado** com `current_result` derivado dos eventos.
+- **EvaluationEvent** — **append-only**: `applied_result`, `admin_user_id`,
+  `event_type` (decisão inicial/revisão/correção), `reason`, `previous_event_id`.
+- **ScoreTransaction** — `player_id`, **`evaluation_event_id`** (idempotência por
+  evento), `points` (**positivo ou negativo**); nunca sobrescrita.
+- **RankingEntry (projeção)** — ranking **denso**; UUID só para ordenação técnica.
+- **AuditLog** — trilha de ações administrativas; nunca guarda a imagem.
 
 ---
 
@@ -733,15 +743,33 @@ flowchart TD
     Então o texto é preservado como rascunho/histórico e o desafio fica `pulado`.
 14. **Trocar charada pulada** — Dado um desafio pulado; Quando se tenta trocá-lo
     por outro; Então não há troca (não suportado no MVP).
-15. **Reavaliação compensatória** — Dado pontos concedidos; Quando a aprovação é
-    revertida; Então uma transação **compensatória negativa** é criada,
-    preservando a original, com motivo/autor/data.
-16. **Pontuação duplicada** — Dada uma `Evaluation` já pontuada; Quando há nova
-    tentativa; Então nenhuma segunda concessão ocorre (idempotência por
-    `evaluation_id`).
-17. **Exclusão com auditoria** — Dada uma imagem no fim do ciclo de retenção;
+15. **Exclusão com auditoria** — Dada uma imagem no fim do ciclo de retenção;
     Quando expurgada; Então o objeto e o registro são excluídos, mantendo
     auditoria **sem** a fotografia.
+
+### Cenários do modelo de avaliação por eventos (Evaluation/EvaluationEvent)
+
+16. **Aprovação inicial** — Dado uma participação pendente; Quando o admin
+    aprova; Então é criado **um `EvaluationEvent`** (decisão inicial) e **uma**
+    `ScoreTransaction` **+10**.
+17. **Mesmo evento não duplica** — Dado um `EvaluationEvent` já processado;
+    Quando o efeito é reprocessado; Então **nenhuma** segunda transação é criada
+    (idempotência por `evaluation_event_id`).
+18. **Revisão para rejeitada** — Dada uma aprovação; Quando o admin revisa para
+    rejeitada; Então há **novo evento** e **uma transação −10**.
+19. **Nova aprovação** — Dada uma rejeição revisada; Quando o admin aprova de
+    novo; Então há **outro evento** e **uma transação +10**.
+20. **Eventos preservados** — Dada uma sequência de eventos; Quando o estado
+    atual muda; Então **nenhum** evento anterior é apagado.
+21. **Ranking pela soma** — Dado o histórico de transações; Quando o ranking é
+    calculado; Então reflete a **soma** (positivas + negativas).
+22. **Rejeição inicial** — Dada uma participação; Quando a decisão inicial é
+    rejeitar; Então **nenhuma** transação é criada.
+23. **Eventos distintos, efeitos distintos** — Dada uma mesma `Evaluation`;
+    Quando há dois eventos diferentes; Então cada um pode gerar seu próprio
+    efeito (uma transação por evento).
+24. **Um evento, um efeito** — Dado um único `EvaluationEvent`; Quando
+    processado; Então **nunca** produz duas transações.
 
 ---
 

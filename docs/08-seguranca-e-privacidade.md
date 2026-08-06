@@ -19,10 +19,11 @@
 - Deve-se prever **consentimento** apropriado (provavelmente do responsável
   legal). A forma exata é `PENDENTE`.
 - O consentimento deve ser **específico, informado e revogável**.
-- Registrar estado e data do consentimento (ver `Guardian.consent_status` em
+- Registrar consentimento como histórico **append-only** (`ConsentRecord`); o
+  **estado vigente deriva dos registros**, não de um campo em `Guardian` (ver
   [modelo de dados](07-modelo-de-dados-inicial.md)).
-- Sem consentimento válido, funcionalidades que coletam dados de menores devem
-  ser bloqueadas (`HIPÓTESE`).
+- Sem consentimento válido, câmera/galeria/upload de menores ficam **bloqueados**
+  (gate de mídia — ver seção 12).
 
 ## 3. Minimização de dados
 

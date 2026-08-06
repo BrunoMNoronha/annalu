@@ -64,15 +64,19 @@
   órfão é removido e a resposta fica incompleta.
 - Sem retomada após a expiração (DEC-009).
 
-## 9. Testes do cálculo de pontuação
+## 9. Testes do cálculo de pontuação e avaliação por eventos
 
-- Apenas participações aprovadas geram pontos; rejeitadas geram zero.
 - **Pontos fixos** (padrão 10, configurável); a rodada usa o **snapshot** do valor.
-- **Idempotência:** uma `Evaluation` não gera concessão em duplicidade
-  (`evaluation_id`).
-- **Reavaliação:** reversão cria **transação compensatória negativa** sem apagar
-  a original; total = soma das transações válidas.
-- Transações rastreáveis à avaliação de origem.
+- **Aprovação inicial** cria **um `EvaluationEvent`** e **uma** transação **+10**.
+- **Idempotência por evento:** o **mesmo `EvaluationEvent`** não gera segunda
+  transação (`evaluation_event_id`).
+- **Revisão** aprovada→rejeitada cria **novo evento** e transação **−10**;
+  **nova aprovação** cria outro evento e **+10**.
+- **Rejeição inicial não cria transação.**
+- Eventos anteriores **nunca** são apagados; transações **nunca** são alteradas;
+  o total = **soma** (positivas + negativas).
+- **Um evento nunca produz dois efeitos**; **eventos distintos** da mesma
+  avaliação podem produzir efeitos distintos.
 
 ## 10. Testes do ranking
 

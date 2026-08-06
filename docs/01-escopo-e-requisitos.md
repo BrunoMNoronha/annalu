@@ -36,7 +36,7 @@
 | RF-ADM-007 | O administrador registra um motivo ao rejeitar. | HIPÓTESE |
 | RF-ADM-008 | O administrador autentica-se antes de acessar o painel. | CONFIRMADO |
 | RF-ADM-009 | Ações administrativas são registradas em log de auditoria. | HIPÓTESE |
-| RF-ADM-010 | O administrador pode cadastrar múltiplas charadas por palavra. | HIPÓTESE |
+| RF-ADM-010 | O administrador pode cadastrar **múltiplas charadas por palavra** (relação 1:N). | CONFIRMADO (DEC-006) |
 
 ## 3. Requisitos funcionais — Configuração do jogo (`RF-CFG`)
 

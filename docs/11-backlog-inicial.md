@@ -29,7 +29,7 @@
 | ------ | --------- | ----- | ---------------------- | ------------ | ---------- |
 | HIST-CONT-001 | CRUD de palavras | Acervo de conteúdo | Criar/editar/desativar palavra | HIST-AUTH-002 | Alta |
 | HIST-CONT-002 | CRUD de charadas por palavra | Conteúdo jogável | Charada vinculada a palavra; enunciado | HIST-CONT-001 | Alta |
-| HIST-CONT-003 | Respostas aceitas por charada | Base para avaliação | Uma ou mais respostas aceitas | HIST-CONT-002; múltiplas respostas `PENDENTE` | Alta |
+| HIST-CONT-003 | Respostas aceitas por charada | Base para avaliação | Uma ou mais respostas aceitas (relação **1:N**) | HIST-CONT-002; DEC-005 ✅ | Alta |
 | HIST-CONT-004 | Ativar/desativar conteúdo | Curadoria | Só ativos entram no sorteio | HIST-CONT-002 | Média |
 
 ## Épico 4 — Configuração do jogo (`CFG`)
@@ -74,7 +74,7 @@
 
 | Código | Descrição | Valor | Critérios de aceitação | Dependências | Prioridade |
 | ------ | --------- | ----- | ---------------------- | ------------ | ---------- |
-| HIST-SCORE-001 | Conceder pontos ao aprovar | Recompensa | Pontos fixos (padrão 10, configurável, snapshot na rodada); só aprovadas geram pontos; idempotência por `evaluation_id` | HIST-EVAL-003; DEC-003 ✅ | Alta (futura — **não concluída**) |
+| HIST-SCORE-001 | Conceder pontos ao aprovar | Recompensa | Pontos fixos (padrão 10, configurável, snapshot na rodada); só aprovadas geram pontos; idempotência por **`evaluation_event_id`** (um `EvaluationEvent` → no máx. 1 transação) | HIST-EVAL-003; DEC-003 ✅ | Alta (futura — **não concluída**) |
 | HIST-SCORE-002 | Ranking denso | Engajamento e justiça | Ordena por total validado; empatados compartilham posição; UUID só p/ ordenação técnica | HIST-SCORE-001; DEC-004 ✅ | Alta (futura — **não concluída**) |
 | HIST-SCORE-003 | Transações compensatórias na reavaliação | Rastreabilidade | Reversão cria transação negativa (motivo/autor/data); histórico preservado; total recalculado | HIST-SCORE-001; DEC-003 ✅ | Média (futura — **não concluída**) |
 

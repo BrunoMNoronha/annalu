@@ -27,11 +27,15 @@
 | DEC-017 | **Limites de idade** | Público e conformidade | Definir faixa etária mínima/máxima | ⏳ PENDENTE — **`DEPENDE DE REVISÃO JURÍDICA`**. Direção: não coletar nascimento/idade; bloqueio de lançamento (não do modelo físico). Ver [pacote](13-pacote-decisoes-mvp.md) |
 | DEC-018 | **Consentimento** | Base legal LGPD | Modelo de consentimento parental · fluxo de revogação | ⚠️ PARCIAL — modelo técnico aprovado: `ConsentRecord` **append-only, versionado, revogável**; texto/base legal/verificação/validade `DEPENDE DE REVISÃO JURÍDICA`. Ver [pacote](13-pacote-decisoes-mvp.md) |
 
-> 📦 **Pacote de decisões do MVP:** opções, trade-offs e **recomendações NÃO
-> APROVADAS** para DEC-001, DEC-002/018, DEC-003, DEC-004, DEC-008, DEC-009 e
-> DEC-010 estão em [13 — Pacote de decisões do MVP](13-pacote-decisoes-mvp.md).
-> Enquanto o orquestrador não decidir, todos esses itens permanecem `PENDENTE`
-> (exceto DEC-007, resolvida acima conforme o briefing).
+> 📦 **Pacote de decisões do MVP** ([13](13-pacote-decisoes-mvp.md)) — estado
+> atual:
+> - **Decisões de produto resolvidas** estão registradas: DEC-001, DEC-003,
+>   DEC-004, DEC-005, DEC-006, DEC-007, DEC-008, DEC-009.
+> - **Decisões parciais** continuam **dependentes do jurídico**: DEC-002 e
+>   DEC-018 (consentimento/fluxo do responsável) e DEC-010 (retenção — apenas o
+>   **ciclo técnico** está aprovado; **prazo** pendente).
+> - **DEC-017** permanece **jurídica** (`DEPENDE DE REVISÃO JURÍDICA`).
+> - As **análises e matrizes originais** permanecem no pacote como **histórico**.
 
 ## Como resolver uma decisão
 
