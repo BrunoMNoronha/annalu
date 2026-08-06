@@ -178,8 +178,13 @@
 | ----- | ---- | ----- |
 | id | UUID | PK |
 | player_answer_id | UUID | FK → PlayerAnswer (no máx. uma por participação) |
-| current_result | estado | derivado dos eventos: `pendente`/`aprovada`/`rejeitada` |
+| current_result | estado | `pendente`/`aprovada`/`rejeitada` |
 | updated_at | timestamp | |
+
+> `current_result = pendente` é possível **quando não existem eventos** (avaliação
+> recém-criada, ainda sem decisão administrativa). Após a **primeira decisão**, o
+> estado atual **deriva do histórico de eventos** (não se cria um evento
+> artificial de "pendente").
 
 ### EvaluationEvent (evento de avaliação — append-only)
 | Campo | Tipo | Notas |
@@ -368,7 +373,7 @@ erDiagram
 - **PlayerAnswer 0..1 SubmittedImage** durante o fluxo — mas **uma resposta
   enviada exige exatamente uma imagem válida** (foto obrigatória)
 - **PlayerAnswer 0..1 Evaluation**
-- **Evaluation 1:N EvaluationEvent**
+- **Evaluation 0:N EvaluationEvent** (pendente sem evento até a 1ª decisão)
 - **EvaluationEvent 0..1 ScoreTransaction** (idempotência por evento)
 - **Player 1:N ScoreTransaction**
 

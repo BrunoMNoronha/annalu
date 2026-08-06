@@ -83,12 +83,20 @@ obrigatório de retenção** e **validade de fluxo** são
 `DEPENDE DE REVISÃO JURÍDICA` e **não** são decididos aqui (ver
 [08](08-seguranca-e-privacidade.md), §12).
 
-## Decisões necessárias para destravar o modelo físico
+## Decisões que destravaram o modelo físico
 
-Bloqueantes diretas do modelo físico: **DEC-001** (Player), **DEC-002/DEC-018**
-(Guardian/ConsentRecord), **DEC-009** (estados de sessão/resposta), **DEC-003**
-(ScoreTransaction) e **DEC-004** (ranking). **DEC-010** e **DEC-008** ajustam
-campos/estados mas não impedem começar as entidades centrais.
+O modelo físico está **documentalmente desbloqueado**:
+
+- **Resolvidas:** DEC-001, DEC-003, DEC-004, DEC-005, DEC-006, DEC-008 e DEC-009.
+- **Parciais** (direção de produto/modelagem aprovada, **componentes jurídicos
+  pendentes**): DEC-002 e DEC-018 (responsável/consentimento).
+- **DEC-010:** **ciclo técnico** de retenção aprovado; **prazo jurídico
+  pendente**.
+- **DEC-017:** permanece **jurídica**.
+
+Portanto, o schema pode ser desenhado com base nestas decisões. **O lançamento e
+o processamento real de fotografias continuam bloqueados** até a revisão jurídica
+(retenção/consentimento) — isso **não** bloqueia a modelagem documental.
 
 ---
 

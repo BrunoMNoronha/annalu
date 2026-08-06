@@ -67,6 +67,9 @@
 ## 9. Testes do cálculo de pontuação e avaliação por eventos
 
 - **Pontos fixos** (padrão 10, configurável); a rodada usa o **snapshot** do valor.
+- **Avaliação pendente sem evento:** dada uma `Evaluation` recém-criada e
+  pendente, quando ainda não ocorreu decisão administrativa, então ela possui
+  **zero `EvaluationEvent`** e **nenhuma** `ScoreTransaction`.
 - **Aprovação inicial** cria **um `EvaluationEvent`** e **uma** transação **+10**.
 - **Idempotência por evento:** o **mesmo `EvaluationEvent`** não gera segunda
   transação (`evaluation_event_id`).

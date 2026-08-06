@@ -28,8 +28,8 @@
 | **SessionChallenge** | Instância de uma charada dentro de uma rodada. | CONFIRMADO |
 | **PlayerAnswer** | Resposta textual da criança para um desafio. | CONFIRMADO |
 | **SubmittedImage** | Fotografia enviada junto à resposta. | CONFIRMADO |
-| **Evaluation** | **Agregado** e estado atual da avaliação de uma participação (derivado dos eventos). | CONFIRMADO |
-| **EvaluationEvent** | Evento **append-only** de decisão/revisão/correção (autor, resultado, motivo, data); trilha auditável. | CONFIRMADO |
+| **Evaluation** | **Agregado** e estado atual da avaliação de uma participação. Pode existir **pendente sem nenhum evento**; após a 1ª decisão, o estado deriva dos eventos. | CONFIRMADO |
+| **EvaluationEvent** | Evento **append-only** de decisão/revisão/correção (autor, resultado, motivo, data); trilha auditável. **Zero antes da 1ª decisão.** | CONFIRMADO |
 | **ScoreTransaction** | Registro rastreável de pontos (positivo ou **compensatório**); idempotente por **`evaluation_event_id`** (um evento → no máx. uma transação). | CONFIRMADO (DEC-003) |
 | **RankingEntry** | **Projeção derivada** (ranking denso; empate compartilha posição; UUID só p/ ordenação técnica). | CONFIRMADO (DEC-004) |
 | **AuditLog** | Registro imutável de ações administrativas. | HIPÓTESE |
@@ -60,8 +60,11 @@
   **participação enviada exige exatamente uma imagem válida** (foto obrigatória).
 - **PlayerAnswer → Evaluation:** cada participação recebe (no máximo) uma
   `Evaluation` (agregado).
-- **Evaluation → EvaluationEvent:** a avaliação tem **1..N** eventos append-only;
-  o estado atual deriva deles.
+- **Evaluation → EvaluationEvent:** `Evaluation` **0:N** `EvaluationEvent` — uma
+  avaliação pode ser criada **pendente sem evento**; a **primeira decisão
+  administrativa** cria o primeiro evento; os seguintes representam **revisão** ou
+  **correção**. O **estado atual deriva do último evento aplicável**; eventos
+  anteriores permanecem **imutáveis**.
 - **EvaluationEvent → ScoreTransaction:** cada evento gera **no máximo uma**
   transação (idempotência por `evaluation_event_id`).
 - **Player → ScoreTransaction:** um jogador acumula **N transações** (positivas e
