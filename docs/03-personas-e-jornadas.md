@@ -24,8 +24,11 @@
 - **Objetivos:** garantir que a criança use algo seguro, educativo e adequado.
 - **Necessidades:** clareza sobre privacidade, controle/consentimento, confiança
   na moderação humana.
-- **Papel possível:** conceder consentimento, iniciar a rodada, supervisionar a
-  captura de fotos. (Necessidade de cadastro de responsáveis é `PENDENTE`.)
+- **Papel (DEC-002, direção aprovada):** responsável **autenticado e persistente**
+  (login por e-mail ou Google), exigido **antes da primeira câmera/galeria/upload**;
+  concede/revoga consentimento e pode auxiliar na recuperação do acesso da
+  criança. Um responsável principal por criança; um responsável pode vincular
+  várias crianças. Validade do fluxo `DEPENDE DE REVISÃO JURÍDICA`.
 
 ### 3. Administrador (AdminUser)
 

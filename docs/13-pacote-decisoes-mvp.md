@@ -1,10 +1,40 @@
 # 13 — Pacote de decisões do MVP
 
+> ℹ️ **Histórico + decisões.** Este documento **começou como pacote de análise**
+> (opções, trade-offs e recomendações não aprovadas). Em **6 de agosto de 2026**
+> o orquestrador respondeu ao formulário e as **decisões de produto foram
+> registradas** (ver a seção a seguir). As análises originais são preservadas
+> como histórico. **Itens jurídicos permanecem parciais ou pendentes** e
+> **nenhuma conclusão jurídica foi tomada** aqui. Marcações: `OPÇÃO`,
+> `HIPÓTESE`, `RECOMENDAÇÃO`, `DECISÃO DO ORQUESTRADOR`,
+> `⚠️ PARCIAL`, `DEPENDE DE REVISÃO JURÍDICA`.
+
+## Decisões do orquestrador — 6 de agosto de 2026
+
+| Código | Decisão | Status | Impacto | Dependência jurídica |
+| --- | --- | --- | --- | --- |
+| DEC-001 | Identificação: **apelido + código de acesso gerado** (UUID interno; código é **credencial secreta**) | ✅ RESOLVIDA | `Player`, autenticação da criança | Não |
+| DEC-002 | Responsável **autenticado e persistente**, exigido **antes da 1ª câmera/galeria/upload**; 1 responsável principal por criança, 1 responsável → N crianças | ⚠️ PARCIAL | `Guardian`, gate de foto | **Sim** (validade do fluxo) |
+| DEC-018 | Consentimento **append-only, versionado, auditável e revogável** (`ConsentRecord`); estado vigente derivado do histórico | ⚠️ PARCIAL | `ConsentRecord`, retenção | **Sim** (texto, base legal, verificação) |
+| DEC-003 | **Pontos fixos por resposta aprovada** (padrão **10**, configurável; snapshot na rodada); reavaliação por **transação compensatória** | ✅ RESOLVIDA | `ScoreTransaction`, `GameConfiguration` | Não |
+| DEC-004 | **Ranking denso**; empatados **compartilham posição**; UUID só para ordenação técnica; **sem** horário de avaliação/tempo/rejeições | ✅ RESOLVIDA | ranking (projeção) | Não |
+| DEC-005 | Palavra **1:N** charadas (relacional) | ✅ RESOLVIDA (modelagem) | `Word`/`Riddle` | Não |
+| DEC-006 | Charada **1:N** respostas aceitas (relacional) | ✅ RESOLVIDA (modelagem) | `Riddle`/`AcceptedAnswer` | Não |
+| DEC-007 | **Fotografia obrigatória para envio** (rascunho pode existir sem imagem) | ✅ RESOLVIDA | envio/validação | Não |
+| DEC-008 | **Pular com zero ponto**, sem troca; estado `pulado` | ✅ RESOLVIDA | `SessionChallenge`/`PlayerAnswer` | Não |
+| DEC-009 | Expiração **envia automaticamente só respostas completas**; tolerância de upload **60 s** (`upload_grace_seconds`) | ✅ RESOLVIDA | estados de sessão/resposta/imagem | Não |
+| DEC-010 | Ciclo técnico de retenção aprovado (`retention_until`, expurgo, auditoria sem imagem); **prazo NÃO definido** | ⚠️ PARCIAL | `SubmittedImage`, expurgo | **Sim** (prazo/base legal) — **bloqueia lançamento com fotos** |
+| DEC-017 | Faixa etária | ⏳ PENDENTE | bloqueio de lançamento | **Sim** |
+
 > ⚠️ **Este documento não aprova nada.** Ele reúne **opções**, **trade-offs** e
 > **recomendações NÃO APROVADAS** para que o orquestrador decida. Nenhuma
 > recomendação aqui é `CONFIRMADO`/`RESOLVIDO`. Marcações usadas:
 > `OPÇÃO`, `HIPÓTESE`, `RECOMENDAÇÃO NÃO APROVADA`,
 > `DEPENDE DE DECISÃO DO ORQUESTRADOR`, `DEPENDE DE REVISÃO JURÍDICA`.
+>
+> **Nota (6 ago 2026):** o parágrafo acima descreve o estado **inicial** do
+> documento e é mantido como histórico. As decisões já tomadas estão na tabela
+> desta seção e anotadas em cada decisão como `DECISÃO DO ORQUESTRADOR`.
 
 ## Finalidade
 
@@ -129,10 +159,27 @@ troca de apelido; filtro de nomes ofensivos; bloqueio/exclusão.
   guardar); código compartilhado permite personificação.
 - **Riscos:** apelidos ofensivos (mitigar com filtro + moderação humana);
   colisão de apelidos (resolver por unicidade + sufixo ou escopo por responsável).
-- **Condições necessárias:** política de geração/armazenamento seguro do código
-  (não é segredo forte, mas não deve vazar em logs/URL); regra de unicidade.
+- **Condições necessárias:** o **código de acesso é uma credencial secreta**
+  (concede acesso ao jogador): armazenar **somente hash** (`access_code_hash`,
+  nome conceitual), nunca em texto puro; **não** registrar em logs; **não**
+  transportar em query string; permitir **rotação e revogação**; aplicar
+  **limitação de tentativas** (rate limiting); evitar códigos triviais. O
+  formato exato é decisão técnica da implementação. Regra de unicidade de UUID.
 - **Versão futura:** vínculo opcional com responsável (migrar B→C) para
   recuperação forte.
+
+### `DECISÃO DO ORQUESTRADOR` (6 ago 2026) — ✅ RESOLVIDA
+Escolhida a **Opção B** (coincide com a recomendação). Regras aprovadas:
+- criança tem **UUID interno**; **apelido público** não é identificador de
+  autenticação; apelidos **não** precisam ser globalmente únicos; pode haver um
+  **identificador público curto** para diferenciar apelidos iguais, que **nunca**
+  é o código de acesso;
+- criança **não** tem e-mail, senha ou conta Google; **não** coletar nome
+  completo, documento, data de nascimento ou endereço;
+- **código de acesso = credencial secreta** (hash `access_code_hash`, sem texto
+  puro, sem logs, sem query string, com rotação/revogação e rate limiting);
+- código perdido pode ser recuperado pelo **responsável vinculado**, quando
+  disponível.
 
 ### Consequências de não decidir
 Bloqueia `Player` e, por consequência, `GameSession`, `PlayerAnswer`,
@@ -203,6 +250,25 @@ contato), **condicionado a revisão jurídica**.
 - **Condições necessárias:** texto do termo, base legal e idade — **jurídico**.
 - **Versão futura:** verificação reforçada do responsável; portal do responsável.
 
+### `DECISÃO DO ORQUESTRADOR` (6 ago 2026) — ⚠️ PARCIAL (produto aprovado; jurídico pendente)
+**DEC-002 (produto aprovado):** a criança pode abrir o jogo, definir apelido,
+ler charadas e **digitar/salvar respostas**; **antes da primeira ação que abra
+câmera, galeria ou upload**, o sistema exige **autenticação de um responsável
+persistente** e o consentimento aplicável. No MVP: **1 responsável principal por
+criança**; **1 responsável → N crianças**; múltiplos responsáveis por criança
+ficam para o futuro; o responsável pode auxiliar na recuperação do acesso; a
+criança **não** acessa dados/credenciais do responsável. *(Divergência da
+recomendação: consentimento por evento sem conta foi descartado — o responsável
+é **persistente e autenticado**, com `ConsentRecord` separado.)*
+**DEC-018 (técnico aprovado):** consentimento como registros **append-only**
+(responsável, criança/escopo, versão do termo, ação concedido/revogado,
+data/hora, origem, ator, dados técnicos mínimos para auditoria); estado vigente
+**derivado do histórico** (sem apagar concessões/revogações). Revogação: bloqueia
+novas capturas/seleções/uploads, aciona o fluxo de retenção/exclusão e pode
+impedir novas rodadas que dependam de foto.
+**Pendente jurídico:** texto do termo, base legal, método de verificação e
+validade do fluxo. `DEPENDE DE REVISÃO JURÍDICA`. Termo **não** redigido aqui.
+
 ### Consequências de não decidir
 Bloqueia `Guardian`/`ConsentRecord` e o **gate de upload**; sem isso, o fluxo de
 fotografia (obrigatório) não pode ser liberado com segurança.
@@ -257,6 +323,19 @@ aprovação); **reversão/ajuste** após reavaliação (estorno via nova transa�
 preservando histórico); **resposta rejeitada = 0**; **idempotência** (uma
 `ScoreTransaction` por `Evaluation` aprovada). Valores finais **não** aprovados.
 
+### `DECISÃO DO ORQUESTRADOR` (6 ago 2026) — ✅ RESOLVIDA
+**Opção A (pontos fixos por resposta aprovada)** — coincide com a recomendação.
+- **valor padrão do MVP: `10` pontos**, **configurável**; a **rodada guarda uma
+  cópia (snapshot)** do valor vigente na criação;
+- só aprovação concede pontos; **rejeitada = 0**; concessão **após validação
+  administrativa**; **sem** tempo/velocidade/dificuldade no MVP;
+- **idempotência:** `evaluation_id` é a chave de idempotência conceitual — uma
+  avaliação não produz a mesma concessão duas vezes;
+- **Reavaliação:** **nunca** alterar/apagar uma transação antiga. Reversão de
+  aprovação cria uma **transação compensatória negativa** (preservando a
+  original), registrando **motivo, autor e data**; o ranking é recalculado pela
+  **soma das transações válidas**.
+
 ### Consequências de não decidir
 Bloqueia `ScoreTransaction`, o cálculo e o ranking.
 
@@ -277,8 +356,13 @@ Só pontos validados (6); auditável (9); idempotência (7).
 
 ### Opções (dimensões de desempate)
 Maior nº de desafios aprovados · menor tempo de rodada · menor nº de rejeições ·
-primeiro a atingir a pontuação · **data da última pontuação validada** · apelido/
+primeiro a atingir a pontuação · data da validação administrativa · apelido/
 identificador (apenas último critério técnico).
+
+> ⚠️ **Rejeitado pelo orquestrador:** qualquer critério baseado no **horário da
+> validação administrativa**, **tempo de rodada**, **velocidade**, **nº de
+> rejeições** ou **ordem de cadastro** — a fila do administrador não pode alterar
+> a posição competitiva da criança. Ver a decisão abaixo.
 
 ### Matriz comparativa (critério isolado)
 | Critério | Justiça | Determinismo | Robusto a conexão lenta | Estável p/ paginação |
@@ -291,14 +375,22 @@ identificador (apenas último critério técnico).
 | Apelido/UUID | — (arbitrário) | **Alta** | Alta | **Alta** |
 
 ### Recomendação para o MVP — `RECOMENDAÇÃO NÃO APROVADA`
-**Cadeia:** (1) maior pontuação validada → (2) maior nº de respostas aprovadas →
-(3) menor nº de rejeições → (4) **data/hora da última pontuação validada** (mais
-cedo ganha) → (5) **UUID interno** (desempate técnico final, determinístico).
-- **Justificativa:** evita usar "tempo de rodada" (penaliza conexão lenta);
-  termina em critério 100% determinístico, garantindo ordenação/paginação estável.
-- **Limitações:** o critério (4) favorece quem jogou/foi avaliado antes —
-  aceitável e transparente.
-- **Riscos:** reavaliações fora de ordem alteram (4); auditar mudanças (9).
+> ⚠️ **Recomendação original SUPERADA pela decisão do orquestrador.** A cadeia
+> antes sugerida incluía o horário da validação como critério — isso foi
+> **rejeitado** (a ordem da fila administrativa não pode influenciar a posição
+> competitiva). Mantido como histórico.
+
+### `DECISÃO DO ORQUESTRADOR` (6 ago 2026) — ✅ RESOLVIDA
+**Ranking denso**, sem qualquer critério ligado à avaliação/tempo:
+- ordenar por **total de pontos validados**, decrescente;
+- jogadores com o **mesmo total compartilham a mesma posição competitiva**
+  (ranking **denso**: 1º, 1º, 2º);
+- **não** usar tempo de rodada, horário de avaliação, nº de rejeições nem ordem
+  de cadastro como vantagem competitiva;
+- para **paginação/resultado determinístico**, ordenar os empatados
+  **tecnicamente por UUID interno** — essa ordenação **não altera a posição
+  exibida** (distinguir **posição competitiva** de **ordenação técnica**);
+- **não** criar campo `tiebreaker` no modelo apenas para isso.
 
 ### Consequências de não decidir
 Ranking sem ordenação estável; paginação inconsistente; testes de ranking sem
@@ -368,6 +460,28 @@ Comportamento por estado no instante da expiração:
 **Hipóteses:** duração da janela de tolerância; autoridade do relógio (servidor);
 se há retomada (no MVP, **não**).
 
+### `DECISÃO DO ORQUESTRADOR` (6 ago 2026) — ✅ RESOLVIDA
+Ao expirar, **enviar automaticamente apenas as respostas completas** (regra
+operacional única e inequívoca — não há mais duas opções semanticamente iguais).
+**Resposta completa =** texto salvo **+** fotografia válida **confirmada no
+servidor** **+** ainda não enviada **+** desafio da rodada **+** sem submissão
+anterior. Comportamento por estado:
+- **Completa:** enviada automaticamente, entra na fila **uma única vez**
+  (idempotente).
+- **Texto sem foto:** permanece salvo, vira **histórico somente leitura**; não
+  enviável, não avaliável, não pontua.
+- **Desafio não iniciado:** permanece sem resposta; não pontua; **não** cria
+  resposta artificial.
+- **Upload iniciado antes do prazo:** o **servidor é a autoridade do tempo**;
+  conclui após o limite **apenas** se houver **reserva/autorização de upload
+  emitida antes do prazo**, **nenhum** upload novo após o prazo e a finalização
+  ocorrer dentro da **tolerância configurável** (`upload_grace_seconds`, padrão
+  **60 s**; a rodada copia esse valor na criação). Após a tolerância, o **objeto
+  órfão é removido** e a resposta permanece incompleta e somente leitura.
+- **Depois da expiração:** sem novos textos/imagens/substituições; **sem
+  retomada** no MVP; exibir **resumo** do enviado × preservado; comunicação
+  infantil e **não punitiva**.
+
 ### Consequências de não decidir
 Bloqueia os **estados** de `GameSession` e `PlayerAnswer` (logo o enum de status
 no modelo físico) e os testes de expiração/idempotência.
@@ -414,6 +528,17 @@ sem a imagem** (quem avaliou, quando, resultado).
   disparar exclusão antecipada.
 - **Condições:** prazo legal, base legal e fluxo de titular — **jurídico**.
 
+### `DECISÃO DO ORQUESTRADOR` (6 ago 2026) — ⚠️ PARCIAL (ciclo técnico aprovado; prazo jurídico pendente)
+**Aprovado o ciclo técnico** (o modelo deve suportá-lo): **política
+configurável**, `retention_until`, **estado de exclusão**, **data da exclusão**,
+**motivo da exclusão**, **confirmação de exclusão do objeto**, **tentativas e
+falhas de expurgo** e **auditoria sem preservar a fotografia**.
+**NÃO aprovado prazo definitivo.** A duração de **30 dias permanece apenas
+exemplo de análise** — **não** é padrão de produção, requisito confirmado nem
+prazo legal. `DEPENDE DE REVISÃO JURÍDICA`.
+> 🚫 **O lançamento com fotografias permanece bloqueado até a revisão jurídica
+> desta política.**
+
 ### Consequências de não decidir
 Não bloqueia começar `SubmittedImage`, mas bloqueia a **política de expurgo** e
 os campos de ciclo de vida (ex.: `deleted_at`, `retention_until`).
@@ -455,6 +580,16 @@ troca).
 - **Limitações:** rodadas podem ficar curtas (aceitável).
 - **Versão futura:** limite de pulos ou troca com controle anti-exploração.
 
+### `DECISÃO DO ORQUESTRADOR` (6 ago 2026) — ✅ RESOLVIDA
+**Permitir pular com zero ponto, sem troca** (coincide com a recomendação):
+- pular qualquer desafio **ainda não enviado**; **sem** pontuação negativa;
+  **sem** substituição por nova charada; a rodada segue para o próximo;
+- o desafio fica no estado **`pulado`**, **não** entra em avaliação e **não**
+  gera transação de pontos;
+- **texto** digitado antes de pular é **preservado** como rascunho/histórico;
+- **fotografia** iniciada antes de pular é **cancelada/removida com segurança**;
+- **não** é possível desfazer o pulo no MVP.
+
 ### Consequências de não decidir
 Ajuste menor em `SessionChallenge`/`PlayerAnswer` (estado "pulado"); não bloqueia
 o núcleo, mas afeta testes de progresso.
@@ -470,16 +605,24 @@ Ver formulário, item 8.
 
 | Decisão | Tema | Classificação |
 | --- | --- | --- |
-| DEC-005 | Múltiplas respostas aceitas por charada | **Parcialmente bloqueante** (cardinalidade `AcceptedAnswer`) · técnica/produto |
-| DEC-006 | Múltiplas charadas por palavra | **Parcialmente bloqueante** (cardinalidade `Word`→`Riddle`) · técnica/produto |
+| DEC-005 | Múltiplas respostas aceitas por charada | ✅ **RESOLVIDA PARA MODELAGEM** — cardinalidade **1:N** (charada → respostas aceitas); UX/curadoria podem evoluir |
+| DEC-006 | Múltiplas charadas por palavra | ✅ **RESOLVIDA PARA MODELAGEM** — cardinalidade **1:N** (palavra → charadas); UX/curadoria podem evoluir |
 | DEC-016 | Moderação de conteúdo | Adiável (a avaliação humana já cobre o MVP) · operacional |
-| DEC-017 | Faixa etária | **Jurídica** · adiável tecnicamente, mas `DEPENDE DE REVISÃO JURÍDICA` |
+| DEC-017 | Faixa etária | ⏳ **PENDENTE — `DEPENDE DE REVISÃO JURÍDICA`** · adiável tecnicamente |
 | DEC-014 | Hospedagem | Adiável · técnica/operacional |
 | DEC-015 | PWA | Adiável · técnica |
 
-Observação: DEC-005 e DEC-006 podem ser **destravadas com um default seguro**
-(≥1 permitido) sem fixar a decisão — recomenda-se modelar como 1..N desde já para
-não exigir migração futura, **sem** aprovar a regra de produto.
+### `DECISÃO DO ORQUESTRADOR` (6 ago 2026)
+- **DEC-005 e DEC-006 — RESOLVIDAS PARA MODELAGEM:** usar **relações 1:N** desde
+  o início (entidades relacionais próprias). Uma palavra pode ter **várias**
+  charadas; uma charada tem **uma ou mais** respostas aceitas. O modelo **não**
+  deve limitar fisicamente a cardinalidade a 1, e **não** usar arrays/JSON para
+  substituir relações. O painel pode começar com operações simples.
+- **DEC-017 — permanece PENDENTE (`DEPENDE DE REVISÃO JURÍDICA`).** Direção
+  aprovada enquanto isso: **não** coletar data de nascimento nem idade exata;
+  **não** inferir idade por fotografia; **não** implementar verificação etária
+  improvisada; tratar a faixa etária como **bloqueio de lançamento**, não do
+  modelo físico inicial.
 
 ---
 
@@ -553,102 +696,121 @@ flowchart TD
 
 > Exemplos para validar as decisões **após** aprovadas; não são testes implementados.
 
-1. **Início sem excesso de dados** — Dado uma criança nova; Quando inicia o jogo;
-   Então nenhum dado pessoal além de apelido (+código, se B) é coletado.
-2. **Foto bloqueada sem consentimento** — Dado que o consentimento é exigido
-   antes da 1ª foto; Quando tenta capturar/enviar sem consentimento; Então o
-   envio é bloqueado com mensagem apropriada.
-3. **Consentimento revogado** — Dado consentimento revogado; Quando há tentativa
-   de novo envio; Então é bloqueado e o tratamento das imagens segue DEC-010.
-4. **Expira com respostas completas** — Dado tempo esgotado com desafios
-   completos não enviados; Quando expira; Então as completas são enviadas
-   automaticamente (uma vez cada).
-5. **Expira com texto sem foto** — Dado texto salvo sem imagem; Quando expira;
-   Então a resposta é preservada como rascunho e **não** é enviada.
-6. **Upload antes/depois do limite** — Dado upload iniciado antes do limite;
-   Quando a gravação server-side conclui dentro da janela; Então conta como
-   completa; caso contrário, permanece rascunho.
-7. **Aprovação** — Dado uma participação pendente; Quando o admin aprova; Então
-   uma `ScoreTransaction` é criada e o ranking atualiza.
-8. **Pontuação dupla** — Dado uma `Evaluation` já pontuada; Quando há nova
-   tentativa de pontuar; Então nenhuma segunda transação é criada (idempotência).
-9. **Reavaliação aprovada→rejeitada** — Dado pontos concedidos; Quando a
-   avaliação muda para rejeitada; Então há estorno auditável e o ranking reflete.
-10. **Empate no ranking** — Dado dois jogadores com mesma pontuação; Quando
-    ranqueados; Então a cadeia de desempate (DEC-004) produz ordem determinística.
-11. **Retenção atingida** — Dada uma imagem no prazo de retenção; Quando o prazo
-    vence; Então o objeto e o registro são excluídos, mantendo auditoria sem a
-    imagem.
-12. **Apelido impróprio** — Dado um apelido ofensivo; Quando a criança tenta
-    usá-lo; Então é rejeitado pelo filtro (e/ou moderação humana).
-13. **Pular desafio** — Dado um desafio; Quando a criança pula; Então (conforme a
-    alternativa) o desafio fica sem pontos e a rodada segue.
+1. **Apelidos iguais** — Dado dois jogadores com o mesmo apelido; Quando ambos
+   existem; Então cada um tem UUID interno distinto e um identificador público
+   curto os diferencia (o código de acesso nunca é usado para isso).
+2. **Código inválido repetido** — Dado tentativas repetidas de código de acesso
+   inválido; Quando excedem o limite; Então o rate limiting bloqueia novas
+   tentativas e nada é registrado em texto puro/logs.
+3. **Responsável por e-mail** — Dado o gate de fotografia; Quando o responsável
+   autentica por e-mail (link/código); Então o vínculo persistente é
+   estabelecido e o consentimento pode ser registrado.
+4. **Responsável por Google** — Dado o gate de fotografia; Quando o responsável
+   autentica por Google; Então nenhuma credencial de provedor é persistida
+   indevidamente e a identidade externa não substitui o UUID interno.
+5. **Câmera sem consentimento** — Dado consentimento ausente; Quando a criança
+   tenta abrir câmera/galeria/upload; Então a ação é bloqueada com mensagem
+   apropriada.
+6. **Consentimento revogado** — Dado consentimento revogado; Quando há tentativa
+   de nova captura/upload; Então é bloqueado, o histórico append-only é
+   preservado e o fluxo de retenção/exclusão (DEC-010) é acionado.
+7. **Empate compartilha posição** — Dado dois jogadores com o mesmo total
+   validado; Quando ranqueados; Então compartilham a mesma posição (ranking
+   denso), sem influência do horário de avaliação.
+8. **UUID só na ordem técnica** — Dado empatados; Quando a lista é paginada;
+   Então o UUID interno define a ordem técnica **sem** alterar a posição exibida.
+9. **Expira com resposta completa** — Dado tempo esgotado com resposta completa
+   não enviada; Quando expira; Então é enviada automaticamente **uma única vez**.
+10. **Expira com texto sem imagem** — Dado texto salvo sem imagem; Quando expira;
+    Então vira histórico somente leitura, não enviável, não pontua.
+11. **Upload reservado e finalizado em 60 s** — Dada reserva de upload emitida
+    antes do prazo; Quando finaliza dentro de `upload_grace_seconds` (60 s);
+    Então a resposta conta como completa.
+12. **Upload fora da tolerância** — Dado upload que finaliza após a tolerância;
+    Quando o prazo+tolerância vence; Então o objeto órfão é removido e a resposta
+    permanece incompleta/somente leitura.
+13. **Pulo após texto digitado** — Dado texto digitado; Quando a criança pula;
+    Então o texto é preservado como rascunho/histórico e o desafio fica `pulado`.
+14. **Trocar charada pulada** — Dado um desafio pulado; Quando se tenta trocá-lo
+    por outro; Então não há troca (não suportado no MVP).
+15. **Reavaliação compensatória** — Dado pontos concedidos; Quando a aprovação é
+    revertida; Então uma transação **compensatória negativa** é criada,
+    preservando a original, com motivo/autor/data.
+16. **Pontuação duplicada** — Dada uma `Evaluation` já pontuada; Quando há nova
+    tentativa; Então nenhuma segunda concessão ocorre (idempotência por
+    `evaluation_id`).
+17. **Exclusão com auditoria** — Dada uma imagem no fim do ciclo de retenção;
+    Quando expurgada; Então o objeto e o registro são excluídos, mantendo
+    auditoria **sem** a fotografia.
 
 ---
 
-## 10. Formulário de decisão para o orquestrador
+## 10. Formulário de decisão — respondido pelo orquestrador (6 ago 2026)
 
-> Marque uma opção por item. Itens marcados **[JURÍDICO]** exigem revisão
-> jurídica antes do lançamento.
+> Escolhas marcadas com `[x]`. Itens **[JURÍDICO]** têm **direção de produto
+> escolhida**, mas **validade jurídica pendente** — não são integralmente
+> resolvidos.
 
 ### 1. DEC-001 — Identificação da criança
 - [ ] A — Apelido só no dispositivo
-- [ ] B — Apelido + código gerado
+- [x] **B — Apelido + código de acesso gerado** ✅
 - [ ] C — Jogador vinculado ao responsável
 - [ ] D — Outra
-**Recomendação não aprovada:** B.
+**Recomendação original:** B. **Decisão:** B (código = credencial secreta).
 
 ### 2. DEC-002 — Responsável
 - [ ] A — Obrigatório antes de iniciar
-- [ ] B — Exigido antes da 1ª fotografia
+- [x] **B — Responsável autenticado e persistente, exigido antes da 1ª câmera/galeria/upload** ✅ (direção de produto) · **[JURÍDICO]** validade pendente
 - [ ] C — Consentimento por evento (sem conta persistente)
 - [ ] D — Sem responsável (alto risco)
-**Recomendação não aprovada:** B. **[JURÍDICO]**
+**Recomendação original:** B. **Decisão:** B, porém com responsável **persistente**
+(não "por evento").
 
 ### 3. DEC-018 — Consentimento
-- [ ] Registrar `ConsentRecord` (versão do termo + data + origem) + revogação
+- [x] **Registro `ConsentRecord` append-only, versionado, auditável e revogável** ✅ (direção técnica) · **[JURÍDICO]** texto/base legal/verificação pendentes
 - [ ] Outro modelo
-**Recomendação não aprovada:** registrar `ConsentRecord` com revogação. **[JURÍDICO]**
+**Decisão:** append-only; estado vigente derivado do histórico.
 
 ### 4. DEC-003 — Pontuação
-- [ ] A — Pontos fixos por aprovação
+- [x] **A — Pontos fixos por aprovação** ✅ (padrão **10**, configurável; snapshot na rodada; reavaliação = transação compensatória)
 - [ ] B — Fixos + bônus por tempo
 - [ ] C — Por dificuldade
 - [ ] D — Combinado
-**Recomendação não aprovada:** A (unidade/valor como hipótese).
+**Recomendação original:** A. **Decisão:** A.
 
 ### 5. DEC-004 — Desempate
-- [ ] Cadeia: pontuação → aprovados → menos rejeições → data da última validação → UUID
-- [ ] Outra cadeia
-**Recomendação não aprovada:** a cadeia acima.
+- [x] **Ranking denso: empatados compartilham a mesma posição; UUID só para ordenação técnica** ✅
+- [ ] Cadeia com horário de validação (**rejeitada**)
+**Divergência da recomendação original** (que usava horário de validação): a fila
+administrativa **não** pode alterar a posição competitiva.
 
 ### 6. DEC-009 — Expiração
-- [ ] A — Enviar automaticamente só completas (incompletas viram rascunho)
-- [ ] B — Tudo rascunho para envio posterior
-- [ ] C — Enviar completas; incompletas como histórico
-- [ ] D — Sem envio automático; preservar para o admin
-**Recomendação não aprovada:** A (preservando o que já foi salvo, regra confirmada).
+- [x] **Enviar automaticamente só respostas completas; incompletas viram histórico somente leitura; tolerância de upload 60 s** ✅
+- [ ] Tudo rascunho / sem envio / outras
+**Recomendação original:** A. **Decisão:** A (regra operacional única e inequívoca).
 
 ### 7. DEC-010 — Retenção de fotografias
-- [ ] Prazo fixo curto após a avaliação (ex.: 30 dias, hipótese)
-- [ ] Outro
-**Recomendação não aprovada:** prazo fixo curto pós-avaliação. **[JURÍDICO]**
+- [x] **Ciclo técnico configurável (`retention_until`, expurgo, auditoria sem imagem)** ✅ (direção técnica) · **[JURÍDICO]** prazo pendente
+- [ ] Prazo definitivo agora (**não** aprovado)
+**Decisão:** ciclo técnico aprovado; **prazo NÃO definido** (30 dias é só
+exemplo). Lançamento com fotos **bloqueado** até revisão jurídica.
 
 ### 8. DEC-008 — Pular desafio
 - [ ] Não permitir
-- [ ] Permitir com zero ponto
+- [x] **Permitir com zero ponto, sem troca** ✅
 - [ ] Permitir limitado / trocar
-**Recomendação não aprovada:** permitir com zero ponto.
+**Recomendação original:** permitir com zero ponto. **Decisão:** idem.
 
 ### 9. DEC-005/DEC-006 — Cardinalidades de conteúdo
-- [ ] Modelar 1..N desde já (default seguro), decisão de produto depois
-- [ ] Fixar agora
-**Recomendação não aprovada:** modelar 1..N sem aprovar a regra de produto.
+- [x] **Modelar 1:N desde já (entidades relacionais)** ✅ RESOLVIDA PARA MODELAGEM
+- [ ] Fixar limite de 1
+**Decisão:** 1:N relacional (sem arrays/JSON).
 
 ### 10. DEC-017 — Faixa etária
-- [ ] Encaminhar ao jurídico antes de definir
+- [x] **Encaminhar ao jurídico antes de definir** ✅ · **[JURÍDICO]** — permanece **PENDENTE**
 - [ ] Definir agora
-**Recomendação não aprovada:** encaminhar ao jurídico. **[JURÍDICO]**
+**Decisão:** encaminhar ao jurídico; enquanto isso, não coletar
+nascimento/idade e tratar como bloqueio de lançamento.
 
 ---
 

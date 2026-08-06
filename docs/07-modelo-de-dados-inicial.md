@@ -4,6 +4,48 @@
 > etapa. Nomes de tabelas/campos são propostas. Decisões que impactam o modelo
 > estão em [decisões pendentes](12-decisoes-pendentes.md).
 
+## Atualização conceitual — decisões do MVP (6 ago 2026)
+
+> Prevalece sobre as tabelas ilustrativas abaixo onde houver divergência.
+> Ainda **conceitual**: nenhum tipo Prisma, enum físico, índice ou migration é
+> definido aqui. Ver [pacote de decisões](13-pacote-decisoes-mvp.md).
+
+- **Player** — `id` (UUID interno); `apelido` (público, **não** é login;
+  apelidos **não** são globalmente únicos); `identificador público curto`
+  (opcional, para diferenciar apelidos iguais; **nunca** é o código);
+  **`access_code_hash`** (hash do código de acesso — **credencial secreta**;
+  nunca texto puro; nome conceitual, não contrato físico); estado
+  **ativo/bloqueado**; `guardian_id` **opcional** até o gate da fotografia.
+  **Não coletar:** e-mail/senha da criança, nome completo, documento, data de
+  nascimento, idade, endereço.
+- **AuthIdentity** (contas adultas — conceito separado do perfil de domínio):
+  `provedor` (e-mail link/código ou Google), `identificador externo`, referência
+  ao `Guardian` **ou** `AdminUser`; **sem** token de provedor persistido
+  indevidamente. Campos finais dependem da solução de autenticação (futura).
+- **Guardian** — responsável **persistente**; **meio de contato mínimo**; um
+  responsável vincula **N crianças**; **um responsável principal por criança** no
+  MVP (múltiplos responsáveis por criança = futuro).
+- **ConsentRecord** — **append-only**; `acao` (concedido/revogado); `versao_termo`;
+  `data`; `origem`; `escopo` (criança/evento); `responsavel`; `ator`; trilha de
+  auditoria. **Estado vigente é derivado do histórico** (sem apagar registros).
+- **GameConfiguration / GameSession** — configuração com **pontos por aprovação**
+  e **`upload_grace_seconds`**; a **rodada guarda snapshot** desses valores na
+  criação.
+- **SessionChallenge** — estado conceitual: `pendente`, `ativo`, `completo`,
+  `enviado`, `pulado`, `expirado_incompleto` (não necessariamente enum físico).
+- **PlayerAnswer** — estado conceitual distinguindo `rascunho`, `completa`,
+  `enviada`, `preservada_apos_expiracao`, `em_avaliacao`. `answer_text` é
+  guardado **mesmo quando incorreto**.
+- **SubmittedImage** — ciclo de vida conceitual: `reservada`, `em_upload`,
+  `confirmada`, `associada`, `expirada_orfa`, `excluida`; `storage_key` privado
+  (**nunca** URL pública); campos de retenção `retention_until`, estado/data/
+  motivo de exclusão, confirmação de exclusão do objeto, tentativas/falhas de
+  expurgo. **Prazo de retenção `DEPENDE DE REVISÃO JURÍDICA`.**
+- **ScoreTransaction** — positiva **ou compensatória**; referência à `Evaluation`
+  (idempotência por `evaluation_id`); **nunca** sobrescreve histórico.
+- **Ranking** — **projeção derivada**; **ranking denso** (empate compartilha
+  posição); UUID **apenas** para ordenação técnica (não cria campo `tiebreaker`).
+
 ## Convenções propostas
 
 - Identificadores: chave primária `id` (UUID como `HIPÓTESE`).
@@ -138,13 +180,16 @@
 | points | inteiro | pontos concedidos |
 | created_at | timestamp | |
 
-### RankingEntry (ranking) — `HIPÓTESE` (pode ser projeção derivada)
+### RankingEntry (ranking) — **projeção derivada** (ranking denso)
 | Campo | Tipo | Notas |
 | ----- | ---- | ----- |
 | player_id | UUID | FK → Player |
-| total_points | inteiro | soma das transações válidas |
-| tiebreaker | texto/valor | critério de desempate (`PENDENTE`) |
+| total_points | inteiro | soma das transações válidas (positivas + compensatórias) |
 | updated_at | timestamp | |
+
+> **Sem campo `tiebreaker`** (DEC-004): empatados **compartilham posição**
+> (ranking denso); a ordenação técnica para paginação usa o **UUID interno** e
+> **não** altera a posição competitiva.
 
 ### AuditLog (auditoria) — `HIPÓTESE`
 | Campo | Tipo | Notas |

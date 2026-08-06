@@ -63,7 +63,7 @@
 
 | Código | Regra | Status |
 | ------ | ----- | ------ |
-| RN-FOT-001 | A resposta pode incluir uma fotografia que represente a resposta. | CONFIRMADO |
+| RN-FOT-001 | Um **rascunho** pode temporariamente não possuir fotografia; uma **participação enviada deve possuir exatamente uma fotografia válida** no MVP. A imagem pode ser **substituída antes do envio**; após o envio, a substituição **não** é permitida sem processo administrativo explícito futuro. | CONFIRMADO |
 | RN-FOT-002 | Nesta versão, a fotografia **não** é analisada automaticamente. | CONFIRMADO |
 | RN-FOT-003 | A fotografia é **obrigatória para o envio** de uma participação na primeira versão. Uma resposta pode existir como **rascunho sem imagem**, mas **não pode ser enviada** para avaliação sem uma fotografia válida. (Opção futura de foto facultativa **não** aprovada.) | CONFIRMADO |
 | RN-FOT-004 | Fotografias são armazenadas de forma privada. | CONFIRMADO |
@@ -85,8 +85,9 @@
 | ------ | ----- | ------ |
 | RN-PON-001 | Somente participações **aprovadas** geram pontos. | CONFIRMADO |
 | RN-PON-002 | Participações rejeitadas geram zero ponto. | CONFIRMADO |
-| RN-PON-003 | A fórmula exata de pontos (fixa, por tempo, por dificuldade) é definida. | PENDENTE |
-| RN-PON-004 | Cada concessão de pontos é registrada de forma rastreável (transação). | HIPÓTESE |
+| RN-PON-003 | **Pontos fixos por resposta aprovada** — padrão do MVP **10**, **configurável**; a rodada guarda uma **cópia (snapshot)** do valor vigente na criação. **Sem** tempo, velocidade ou dificuldade no MVP. Ver [DEC-003](13-pacote-decisoes-mvp.md). | CONFIRMADO |
+| RN-PON-004 | Cada concessão é uma **transação** rastreável; `evaluation_id` é chave de **idempotência** (uma avaliação não pontua duas vezes). | CONFIRMADO |
+| RN-PON-005 | **Reavaliação:** nunca alterar/apagar transação antiga; reversão cria **transação compensatória negativa** (com motivo, autor e data); o total deriva da **soma das transações válidas**. | CONFIRMADO |
 
 ## Ranking (`RN-RNK`)
 
@@ -94,7 +95,8 @@
 | ------ | ----- | ------ |
 | RN-RNK-001 | O ranking soma apenas pontuação validada (aprovada). | CONFIRMADO |
 | RN-RNK-002 | O ranking é ordenado por pontuação decrescente. | CONFIRMADO |
-| RN-RNK-003 | O critério de desempate é definido. | PENDENTE |
+| RN-RNK-003 | **Ranking denso:** jogadores com o mesmo total **compartilham a mesma posição** (1º, 1º, 2º). **Não** usar horário de avaliação, tempo de rodada, nº de rejeições ou ordem de cadastro como vantagem competitiva. Ver [DEC-004](13-pacote-decisoes-mvp.md). | CONFIRMADO |
+| RN-RNK-004 | Para paginação determinística, empatados são ordenados **tecnicamente por UUID interno**, o que **não altera a posição competitiva exibida**. | CONFIRMADO |
 
 ## Cancelamento (`RN-CAN`)
 
@@ -103,12 +105,24 @@
 | RN-CAN-001 | Uma rodada pode ser cancelada/abandonada antes do envio. | HIPÓTESE |
 | RN-CAN-002 | Rodada cancelada não gera pontos. | HIPÓTESE |
 
+## Pular desafio (`RN-PUL`)
+
+| Código | Regra | Status |
+| ------ | ----- | ------ |
+| RN-PUL-001 | A criança pode **pular** qualquer desafio ainda não enviado; sem pontuação negativa e **sem** troca por outra charada. | CONFIRMADO |
+| RN-PUL-002 | Um desafio pulado fica no estado **`pulado`**, **não** entra em avaliação e **não** gera transação de pontos. | CONFIRMADO |
+| RN-PUL-003 | Texto digitado antes de pular é **preservado** (rascunho/histórico); fotografia iniciada é **cancelada/removida com segurança**. **Não** é possível desfazer o pulo no MVP. | CONFIRMADO |
+
 ## Expiração (`RN-EXP`)
 
 | Código | Regra | Status |
 | ------ | ----- | ------ |
-| RN-EXP-001 | Uma rodada expira ao atingir o tempo limite. | HIPÓTESE |
-| RN-EXP-002 | Participações não avaliadas não expiram automaticamente (dependem do administrador). | HIPÓTESE |
+| RN-EXP-001 | Uma rodada expira ao atingir o tempo limite (servidor é a autoridade do tempo). | CONFIRMADO |
+| RN-EXP-002 | Ao expirar, **apenas respostas completas** (texto + foto válida confirmada, ainda não enviadas) são **enviadas automaticamente**, uma única vez (idempotente). | CONFIRMADO |
+| RN-EXP-003 | Texto sem fotografia vira **histórico somente leitura** (não enviável, não pontua); desafio não iniciado permanece sem resposta. | CONFIRMADO |
+| RN-EXP-004 | Upload iniciado antes do prazo só conclui dentro da **tolerância** `upload_grace_seconds` (padrão **60 s**, copiada na rodada); após isso, o **objeto órfão é removido** e a resposta fica incompleta/somente leitura. | CONFIRMADO |
+| RN-EXP-005 | Após a expiração não há novos textos/imagens/substituições nem retomada no MVP. | CONFIRMADO |
+| RN-EXP-006 | Participações não avaliadas não expiram automaticamente (dependem do administrador). | HIPÓTESE |
 
 ## Auditoria administrativa (`RN-AUD`)
 

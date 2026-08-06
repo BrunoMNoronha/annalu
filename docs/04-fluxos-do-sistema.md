@@ -6,8 +6,17 @@
 > **Fotografia obrigatória (CONFIRMADO — 1ª versão):** o envio de uma
 > participação exige uma **fotografia válida**; um rascunho pode existir sem
 > imagem, mas não é enviável sem ela (ver [RN-FOT-003](02-regras-de-negocio.md)).
-> O **comportamento da expiração** permanece `PENDENTE` além da preservação do
-> que já foi salvo (ver [DEC-009](13-pacote-decisoes-mvp.md#dec-009--comportamento-ao-expirar-a-rodada)).
+>
+> **Decisões consolidadas (6 ago 2026)** — ver [pacote](13-pacote-decisoes-mvp.md):
+> - **Pular (DEC-008):** a criança pode pular um desafio não enviado (estado
+>   `pulado`, zero ponto, sem troca).
+> - **Expiração (DEC-009):** ao expirar, **apenas respostas completas** (texto +
+>   foto válida confirmada) são **enviadas automaticamente** (uma vez); texto sem
+>   foto vira histórico somente leitura; uploads iniciados antes do prazo só
+>   concluem dentro de `upload_grace_seconds` (60 s), senão o objeto órfão é
+>   removido. Preserva-se o que já foi salvo; sem retomada no MVP.
+> - **Gate de mídia (DEC-002/018):** câmera/galeria/upload exigem responsável
+>   autenticado + consentimento.
 
 ## 1. Fluxo do jogador
 

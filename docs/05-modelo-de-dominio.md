@@ -14,8 +14,10 @@
 
 | Entidade | Responsabilidade | Status |
 | -------- | ---------------- | ------ |
-| **Player** | Representa a criança jogadora e sua identidade no jogo. | HIPÓTESE (identificação `PENDENTE`) |
-| **Guardian** | Adulto responsável vinculado a um jogador; consentimento. | HIPÓTESE (necessidade `PENDENTE`) |
+| **Player** | Criança jogadora: UUID interno, apelido público e `access_code_hash` (código = credencial). | CONFIRMADO (DEC-001) |
+| **Guardian** | Adulto responsável **persistente** vinculado a criança(s); exigido antes do gate de foto. | ⚠️ PARCIAL (DEC-002; jurídico pendente) |
+| **AuthIdentity** | Identidade de autenticação de **contas adultas** (e-mail/Google), separada do perfil de domínio. | HIPÓTESE (solução de auth futura) |
+| **ConsentRecord** | Registro **append-only** de consentimento (concessão/revogação, versão, data, origem, escopo). | ⚠️ PARCIAL (DEC-018; jurídico pendente) |
 | **AdminUser** | Usuário do painel administrativo; cadastra conteúdo e avalia. | CONFIRMADO |
 | **Word** | Palavra-alvo do acervo. | CONFIRMADO |
 | **Riddle** | Charada associada a uma palavra. | CONFIRMADO |
@@ -26,8 +28,8 @@
 | **PlayerAnswer** | Resposta textual da criança para um desafio. | CONFIRMADO |
 | **SubmittedImage** | Fotografia enviada junto à resposta. | CONFIRMADO |
 | **Evaluation** | Decisão humana (aprovar/rejeitar) sobre uma participação. | CONFIRMADO |
-| **ScoreTransaction** | Registro rastreável de pontos concedidos. | HIPÓTESE |
-| **RankingEntry** | Posição/pontuação agregada de um jogador. | HIPÓTESE (pode ser derivado) |
+| **ScoreTransaction** | Registro rastreável de pontos (positivo ou **compensatório**); idempotente por `evaluation_id`. | CONFIRMADO (DEC-003) |
+| **RankingEntry** | **Projeção derivada** (ranking denso; empate compartilha posição; UUID só p/ ordenação técnica). | CONFIRMADO (DEC-004) |
 | **AuditLog** | Registro imutável de ações administrativas. | HIPÓTESE |
 
 ## Responsabilidades e relacionamentos
