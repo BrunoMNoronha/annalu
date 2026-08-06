@@ -471,6 +471,17 @@ ALTER TABLE "evaluation_events"
   ADD CONSTRAINT "evaluation_events_no_self_reference"
   CHECK ("previous_event_id" IS NULL OR "previous_event_id" <> "id");
 
+-- EvaluationEvent: no máximo UMA raiz por avaliação (evento inicial com
+-- previous_event_id NULL). Preserva a cardinalidade Evaluation 0:N EvaluationEvent
+-- (uma avaliação pendente pode ter ZERO eventos e não exige evento artificial) e,
+-- combinada com previous_event_id único, impede bifurcação — inclusive sob
+-- concorrência (duas decisões iniciais simultâneas para a mesma avaliação são
+-- rejeitadas). Constraint MANUAL (não expressável no schema Prisma): migrations
+-- futuras devem preservá-la. Ver docs/14.
+CREATE UNIQUE INDEX "evaluation_events_single_root_per_evaluation_key"
+  ON "evaluation_events" ("evaluation_id")
+  WHERE "previous_event_id" IS NULL;
+
 -- ScoreTransaction: pontos nunca podem ser zero.
 ALTER TABLE "score_transactions"
   ADD CONSTRAINT "score_transactions_points_not_zero" CHECK ("points" <> 0);

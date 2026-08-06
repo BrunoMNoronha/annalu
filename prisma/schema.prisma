@@ -418,7 +418,10 @@ model Evaluation {
 }
 
 // Append-only (sem updatedAt). Cadeia linear via previousEventId único (impede
-// bifurcação). Não autorreferência (check SQL). "Mesma avaliação" fica como
+// bifurcação para frente). Não autorreferência (check SQL). Raiz única por
+// avaliação: índice único parcial `(evaluation_id) WHERE previous_event_id IS
+// NULL` na migration (constraint MANUAL, não expressável no Prisma — preservar em
+// migrations futuras). "previousEvent pertence à mesma Evaluation" continua como
 // invariante de serviço.
 model EvaluationEvent {
   id String @id @default(uuid()) @db.Uuid

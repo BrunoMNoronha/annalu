@@ -61,7 +61,11 @@ revisão é um `EvaluationEvent` **append-only**, em cadeia linear
 (`previousEventId` **único** ⇒ sem bifurcação; check de não autorreferência).
 `ScoreTransaction.evaluationEventId` é **único** ⇒ **um evento → no máx. uma
 transação** (idempotência). Pontos **≠ 0**; positivos/negativos; **rejeição
-inicial não gera transação**. Ranking = **soma** das transações.
+inicial não gera transação**. Ranking = **soma** das transações. **Raiz única por
+avaliação:** índice único parcial `(evaluation_id) WHERE previous_event_id IS
+NULL` ⇒ no máximo um evento inicial por avaliação (impede duas decisões iniciais,
+inclusive sob concorrência), sem alterar a cardinalidade 0:N nem exigir evento
+para uma avaliação pendente.
 
 ## Ranking derivado (sem tabela)
 
@@ -104,7 +108,10 @@ default de 30 dias**), `deletionState`, `deletedAt`, `deletionReason`,
 - `submitted_images`: `player_answer_id` e `storage_key` únicos; check
   `size_bytes>0` (quando presente) e `purge_attempts>=0`.
 - `evaluations.player_answer_id` único.
-- `evaluation_events`: `previous_event_id` único; **check** `id <> previous_event_id`.
+- `evaluation_events`: `previous_event_id` único; **check** `id <> previous_event_id`;
+  **índice único parcial** `(evaluation_id) WHERE previous_event_id IS NULL`
+  (**raiz única por avaliação** — preserva 0:N; impede duas raízes, inclusive sob
+  concorrência).
 - `score_transactions`: `evaluation_event_id` único; **check `points <> 0`**.
 - FKs de histórico com **`Restrict`** (rodada, avaliação, pontuação, conteúdo);
   `SetNull` em vínculos opcionais (`Player.guardian`, `ConsentRecord.recordedBy`);
@@ -115,7 +122,10 @@ default de 30 dias**), `deletionState`, `deletedAt`, `deletionReason`,
 
 - "Resposta **enviada** exige fotografia válida" — atravessa `PlayerAnswer` +
   `SubmittedImage` + estado; aplicada em transação (caso de uso futuro).
-- "`previousEvent` pertence à **mesma** `Evaluation`" — não é expressável com FK.
+- "`previousEvent` pertence à **mesma** `Evaluation`" — não é expressável com FK
+  (invariante de serviço). Nota: a **raiz única por avaliação** (evento inicial)
+  é garantida pelo banco (índice parcial acima); apenas o vínculo do
+  `previousEvent` encadeado à mesma avaliação permanece a cargo do serviço.
 - Imutabilidade append-only (sem `UPDATE`/`DELETE`) — regra de repositório,
   **não** trigger (para não impedir futura política de exclusão jurídica).
 - Geração de `ScoreTransaction` (aprovação/reversão), transição de estados,
@@ -127,9 +137,12 @@ default de 30 dias**), `deletionState`, `deletedAt`, `deletionReason`,
 `prisma/migrations/20260806130000_initial_domain_model/migration.sql` +
 `migration_lock.toml` (`provider = "postgresql"`). SQL base gerado por
 `prisma migrate diff --from-empty --to-schema-datamodel --script` e **aumentado
-manualmente** com os checks, o índice único parcial da configuração atual e o
-check "exatamente um proprietário". Aplicada no CI via `prisma migrate deploy`
-(PostgreSQL real) — **gate autoritativo** (ver limitações).
+manualmente** com os checks, os índices únicos parciais (configuração atual e
+**raiz única de avaliação**) e o check "exatamente um proprietário".
+**Configurada para ser aplicada no CI** via `prisma migrate deploy` em PostgreSQL
+descartável; **validada localmente** contra `postgres:16` descartável (aplica em
+banco vazio; `migrate status` "up to date"). A **validação autoritativa do CI
+permanece pendente** enquanto o workflow não executa os passos.
 
 ## Seed
 
@@ -148,9 +161,10 @@ rodada/avaliação/pontuação reais.
   campos proibidos em `Player`, `accessCodeHash`, `EvaluationEvent`,
   `evaluationEventId`, ausência de `consentStatus`/URL pública).
 - **Integração (PostgreSQL real):** [`tests/integration/prisma/`](../tests/integration/prisma/)
-  — 31 cenários de invariantes + idempotência do seed. **Guard** de segurança
-  (`helpers.ts`) só executa `TRUNCATE`/reset quando o nome do banco contém
-  `_test`/`test`/`integration`.
+  — **34 casos**: 33 de invariantes garantidas pelo banco (inclui **um provedor
+  por perfil** e **raiz única por avaliação**) + 1 de idempotência do seed.
+  **Guard** de segurança (`helpers.ts`) só executa `TRUNCATE`/reset quando o nome
+  do banco contém `_test`/`test`/`integration`.
 
 ## Comandos locais
 
@@ -175,8 +189,10 @@ revisão jurídica. O schema oferece suporte técnico, sem afirmar validade lega
 
 ## Limitações
 
-- Migration e integração **não** foram executadas localmente (Docker/PostgreSQL
-  indisponível no ambiente); são validadas de forma **autoritativa pelo CI**.
+- Migration, seed (2×) e testes de integração **foram executados localmente**
+  contra `postgres:16` **descartável** e aprovados; a **validação autoritativa do
+  CI permanece pendente** enquanto o workflow não executa os passos. Validação
+  local **não** equivale ao CI.
 - O PostgreSQL do CI (imagem `postgres:16`) é **baseline de CI**, não decisão de
   provedor de produção.
 - Invariantes que dependem de serviço (acima) **não** são garantidas pelo banco

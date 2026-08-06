@@ -159,6 +159,68 @@ describe('identidades', () => {
       }),
     ).rejects.toThrow();
   });
+
+  // Índices únicos parciais "um provedor por perfil" (constraints manuais da
+  // migration): (guardian_id, provider) e (admin_user_id, provider).
+  it('9.1. responsável não pode ter duas identidades EMAIL', async () => {
+    const g = await guardian();
+    await prisma.authIdentity.create({
+      data: {
+        provider: 'EMAIL',
+        externalIdentifier: `g1-${uniq()}`,
+        guardianId: g.id,
+      },
+    });
+    await expect(
+      prisma.authIdentity.create({
+        data: {
+          provider: 'EMAIL',
+          externalIdentifier: `g2-${uniq()}`,
+          guardianId: g.id,
+        },
+      }),
+    ).rejects.toThrow();
+  });
+
+  it('9.2. administrador não pode ter duas identidades EMAIL', async () => {
+    const a = await admin();
+    await prisma.authIdentity.create({
+      data: {
+        provider: 'EMAIL',
+        externalIdentifier: `a1-${uniq()}`,
+        adminUserId: a.id,
+      },
+    });
+    await expect(
+      prisma.authIdentity.create({
+        data: {
+          provider: 'EMAIL',
+          externalIdentifier: `a2-${uniq()}`,
+          adminUserId: a.id,
+        },
+      }),
+    ).rejects.toThrow();
+  });
+
+  it('9.3. provedores distintos (EMAIL, GOOGLE) no mesmo perfil são permitidos', async () => {
+    const g = await guardian();
+    await prisma.authIdentity.create({
+      data: {
+        provider: 'EMAIL',
+        externalIdentifier: `e-${uniq()}`,
+        guardianId: g.id,
+      },
+    });
+    await expect(
+      prisma.authIdentity.create({
+        data: {
+          provider: 'GOOGLE',
+          externalIdentifier: `g-${uniq()}`,
+          guardianId: g.id,
+        },
+      }),
+    ).resolves.toBeTruthy();
+  });
 });
 
 // ---------- Conteúdo ----------
@@ -338,6 +400,29 @@ describe('avaliação e pontuação', () => {
     expect(
       await prisma.evaluationEvent.count({ where: { evaluationId: ev.id } }),
     ).toBe(3);
+  });
+
+  // Raiz única por avaliação (índice único parcial WHERE previous_event_id IS
+  // NULL). A cardinalidade 0:N é preservada (ver teste 23: pendente sem eventos).
+  it('25.1. uma avaliação rejeita um segundo evento raiz', async () => {
+    const ans = await oneAnswer();
+    const a = await admin();
+    const ev = await evaluation(ans.id);
+    await event(ev.id, a.id, 'APPROVED', 'INITIAL_DECISION');
+    // Segundo evento também sem previousEventId (segunda raiz) → rejeitado.
+    await expect(
+      event(ev.id, a.id, 'REJECTED', 'INITIAL_DECISION'),
+    ).rejects.toThrow();
+  });
+
+  it('25.2. avaliações distintas têm, cada uma, sua própria raiz', async () => {
+    const a = await admin();
+    const ev1 = await evaluation((await oneAnswer()).id);
+    const ev2 = await evaluation((await oneAnswer()).id);
+    await event(ev1.id, a.id, 'APPROVED', 'INITIAL_DECISION');
+    await expect(
+      event(ev2.id, a.id, 'APPROVED', 'INITIAL_DECISION'),
+    ).resolves.toBeTruthy();
   });
 
   it('26. um evento não pode referenciar a si próprio', async () => {
