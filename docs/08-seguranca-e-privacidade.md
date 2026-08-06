@@ -88,9 +88,50 @@
 ## 11. Boas práticas gerais
 
 - Segredos fora do versionamento (variáveis de ambiente / cofre).
-- Dependências monitoradas quanto a vulnerabilidades.
+- Dependências monitoradas quanto a vulnerabilidades (ver seção 13).
 - Transporte sempre por HTTPS.
 - Tratamento de erros sem vazar detalhes internos ao usuário final.
+
+## 11.1. Política de dependências e auditoria
+
+> Aplica-se a toda mudança de dependências. Faz parte dos gates de CI.
+
+**Critérios de bloqueio (obrigatórios antes de qualquer push):**
+
+- **Nenhuma** vulnerabilidade **crítica** ou **alta** pode permanecer no conjunto
+  **completo** de dependências (produção + desenvolvimento).
+- **Nenhuma** vulnerabilidade **moderada, alta ou crítica** pode permanecer em
+  dependências de **produção**.
+- Vulnerabilidades **baixas/moderadas exclusivamente de desenvolvimento** só
+  podem permanecer quando, cumulativamente: não houver correção estável e
+  compatível; o componente não for executado em produção; a exposição prática
+  tiver sido analisada; e o risco estiver **documentado** com justificativa.
+
+**Gates de CI** (em [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)):
+
+- `pnpm audit --prod --audit-level=moderate` → bloqueia moderadas+ em produção.
+- `pnpm audit --audit-level=high` → bloqueia altas/críticas em qualquer lugar.
+
+**Classificação:** produção vs. desenvolvimento é definida pelo **grafo real**
+do gerenciador (`pnpm audit --prod`, `pnpm why <pkg>`), nunca por suposição.
+Um pacote usado apenas em build/testes ainda pode constar como produção se
+entrar no grafo de produção de uma dependência direta.
+
+**Regras de remediação (nesta ordem):** remover dependência não utilizada →
+patch → minor → major estável e compatível → substituição → mitigação
+documentada (último recurso). É **proibido**: usar versões beta/RC/canary;
+`pnpm audit --fix --force`; `overrides` sem justificativa; `ignore-scripts` ou
+supressão global da auditoria como "solução"; reduzir artificialmente a
+severidade; ou ignorar um advisory sem justificativa registrada.
+
+**`overrides` de segurança** são permitidos apenas para elevar dependências
+**transitivas** a versões corrigidas **compatíveis** (patch/minor no mesmo
+major), com justificativa. As atualizações são monitoradas pelo Dependabot
+([`.github/dependabot.yml`](../.github/dependabot.yml)).
+
+**Revisão humana:** atualizações **major** sensíveis (ex.: Next.js, React,
+Prisma, Vitest) exigem revisão humana — notas de migração e verificação de
+breaking changes — e **não** são mescladas automaticamente.
 
 ## 12. Revisão jurídica (registro)
 

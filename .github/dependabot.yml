@@ -1,0 +1,36 @@
+version: 2
+
+# Atualizações automáticas de dependências (apenas ABERTURA de PRs).
+# Sem auto-merge, sem credenciais, sem acesso a serviços externos.
+updates:
+  # Ecossistema npm (pnpm usa o mesmo manifesto/lockfile).
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 5
+    labels:
+      - 'dependencies'
+    # Agrupa patch/minor seguros em um único PR; major fica separado para
+    # revisão humana (ver docs/08-seguranca-e-privacidade.md).
+    groups:
+      patch-and-minor:
+        applies-to: version-updates
+        update-types:
+          - 'patch'
+          - 'minor'
+    ignore:
+      # Atualizações major exigem revisão humana dedicada (notas de migração,
+      # verificação de breaking changes). Não são abertas automaticamente aqui.
+      - dependency-name: '*'
+        update-types:
+          - 'version-update:semver-major'
+
+  # Ações do GitHub usadas no workflow de CI.
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'monthly'
+    open-pull-requests-limit: 5
+    labels:
+      - 'ci'

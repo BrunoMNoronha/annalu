@@ -89,6 +89,7 @@
 | ------ | --------- | ----- | ---------------------- | ------------ | ---------- |
 | HIST-QA-001 | Suíte de testes base | Confiabilidade | Unit+integração+e2e mínimos rodando | HIST-FUND-002 | Alta |
 | HIST-QA-002 | Logs e monitoramento de erros | Diagnóstico | Erros/falhas de upload registrados | HIST-FUND-003; `HIPÓTESE` | Média |
+| HIST-QA-003 | **Manutenção recorrente de dependências** (recorrente) | Segurança e atualização | Revisar PRs do Dependabot; manter auditoria limpa conforme política ([docs/08](08-seguranca-e-privacidade.md#111-política-de-dependências-e-auditoria)); atualizações major com revisão humana | HIST-FUND-002 | Média (recorrente — nunca "concluída") |
 
 ## Épico 11 — Implantação (`DEPLOY`)
 

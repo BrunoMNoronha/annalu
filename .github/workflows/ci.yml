@@ -32,6 +32,14 @@ jobs:
       - name: Instalar dependências (reproduzível)
         run: pnpm install --frozen-lockfile
 
+      # Gates de segurança de dependências (ver docs/08-seguranca-e-privacidade.md):
+      # bloqueia moderadas+ em produção e altas/críticas em qualquer dependência.
+      - name: Auditoria de dependências de produção (>= moderate)
+        run: pnpm audit --prod --audit-level=moderate
+
+      - name: Auditoria de todas as dependências (>= high)
+        run: pnpm audit --audit-level=high
+
       - name: Gerar Prisma Client
         run: pnpm prisma:generate
 

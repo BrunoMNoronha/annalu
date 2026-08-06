@@ -11,9 +11,9 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    // Padrão em Node; testes de UI (*.dom.test.tsx) rodam em jsdom.
+    // Padrão em Node; testes de UI usam o docblock `// @vitest-environment jsdom`
+    // no topo do arquivo (ex.: src/app/page.dom.test.tsx).
     environment: 'node',
-    environmentMatchGlobs: [['**/*.dom.test.{ts,tsx}', 'jsdom']],
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
     coverage: {
