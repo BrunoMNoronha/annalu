@@ -121,10 +121,11 @@ fontes) são preservados.
 
 - **Não** é necessário alterar a configuração global do Git (ex.:
   `core.autocrlf`); a regra `eol=lf` do `.gitattributes` prevalece no checkout.
-- Checkouts **antigos** (materializados antes desta regra) podem conter CRLF na
-  working tree e reprovar no Prettier. Nesse caso, faça um **clone limpo** ou
-  re-materialize os arquivos (ex.: remover a working tree rastreada e refazer o
-  checkout). Não é necessário reescrever conteúdo.
+- Checkouts antigos, criados antes da adoção do `.gitattributes`, podem manter
+  arquivos já materializados em CRLF. Preserve qualquer trabalho local e
+  confirme que `git status` está limpo. A opção recomendada é criar um clone
+  novo do repositório. Não use `reset --hard`, `git clean` nem apague arquivos
+  rastreados apenas para normalizar finais de linha.
 - **`pnpm format:check` é o gate oficial** de formatação (mesmo comando do CI).
 
 ## Estrutura resumida
