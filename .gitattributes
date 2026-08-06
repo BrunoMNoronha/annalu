@@ -1,0 +1,17 @@
+# Normalização de finais de linha.
+#
+# Arquivos de texto são armazenados no repositório com final de linha LF.
+# Isso mantém Prettier, scripts e CI consistentes em Windows, Linux e macOS,
+# independentemente de core.autocrlf na máquina do desenvolvedor.
+* text=auto eol=lf
+
+# Arquivos binários não devem sofrer conversão de final de linha.
+# (Extensões relevantes ao projeto: imagens e fontes web.)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary

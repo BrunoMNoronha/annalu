@@ -90,6 +90,11 @@
 | HIST-QA-001 | Suíte de testes base | Confiabilidade | Unit+integração+e2e mínimos rodando | HIST-FUND-002 | Alta |
 | HIST-QA-002 | Logs e monitoramento de erros | Diagnóstico | Erros/falhas de upload registrados | HIST-FUND-003; `HIPÓTESE` | Média |
 | HIST-QA-003 | **Manutenção recorrente de dependências** (recorrente) | Segurança e atualização | Revisar PRs do Dependabot; manter auditoria limpa conforme política ([docs/08](08-seguranca-e-privacidade.md#111-política-de-dependências-e-auditoria)); atualizações major com revisão humana | HIST-FUND-002 | Média (recorrente — nunca "concluída") |
+| HIST-QA-004 | Padronizar finais de linha por `.gitattributes` | Consistência entre SOs; `format:check` estável no Windows | ✅ CONCLUÍDA — `.gitattributes` com `* text=auto eol=lf`; binários preservados; sem renormalização em massa | HIST-FUND-002 | Média |
+| HIST-QA-005 | Migração de versão Node.js + `@types/node` | Atualizar runtime suportado | Decisão explícita de nova linha LTS; `.nvmrc`/`engines`/`@types/node` alinhados; regressão completa | Decisão de versão Node `PENDENTE` | Baixa (futura — **não concluída**) |
+| HIST-QA-006 | Migração Prisma 7 (CLI + `@prisma/client` juntos) | Manter ORM atualizado | Migrar `prisma` e `@prisma/client` na mesma major; breaking changes, geração do cliente e impacto na modelagem física analisados | Modelo físico `PENDENTE` | Baixa (futura — **não concluída**) |
+| HIST-QA-007 | Migração TypeScript 6 | Compilador atualizado | Revisar mudanças do compilador e compatibilidade com Next.js/Prisma/ESLint e modo estrito; regressão | HIST-FUND-002 | Baixa (futura — **não concluída**) |
+| HIST-QA-008 | Migração Vitest 4 | Infra de testes atualizada | Revisar configuração, Vite transitivo, ambiente jsdom e regressão completa da suíte | HIST-FUND-002 | Baixa (futura — **não concluída**) |
 
 ## Épico 11 — Implantação (`DEPLOY`)
 
