@@ -48,9 +48,17 @@
 3. Remover ou marcar como resolvido o item nesta tabela, referenciando a ADR ou
    o documento atualizado.
 
+> 🏗️ O **modelo físico Prisma** ([docs/14](14-modelo-fisico-prisma.md), ADR
+> [0002](adr/0002-modelo-fisico-prisma-mvp.md) `Proposta`) oferece **suporte
+> técnico** aos conceitos de DEC-002/010/018, mas **não** resolve os itens
+> jurídicos. O encaminhamento a especialista (DEC-002, DEC-010, DEC-017,
+> DEC-018) está registrado como HIST-SEC-006 no [backlog](11-backlog-inicial.md)
+> e permanece **não iniciado por especialista**.
+
 ## Referências cruzadas
 
 - [Pacote de decisões do MVP](13-pacote-decisoes-mvp.md)
+- [Modelo físico Prisma](14-modelo-fisico-prisma.md)
 - [Opções de arquitetura](06-opcoes-de-arquitetura.md)
 - [Regras de negócio](02-regras-de-negocio.md)
 - [Segurança e privacidade](08-seguranca-e-privacidade.md)

@@ -45,6 +45,7 @@ Decisões pequenas e locais **não** precisam de ADR.
 | Número | Título | Status | Data |
 | ------ | ------ | ------ | ---- |
 | [0001](0001-arquitetura-web-integrada.md) | Arquitetura web integrada | Aceita | 2026-08-05 |
+| [0002](0002-modelo-fisico-prisma-mvp.md) | Modelo físico Prisma do MVP | Proposta | 2026-08-06 |
 
 ## Modelo de ADR
 

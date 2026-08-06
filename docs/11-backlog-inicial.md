@@ -13,6 +13,7 @@
 | HIST-FUND-001 | Escolher e registrar arquitetura via ADR | Base para todo o desenvolvimento | ✅ CONCLUÍDA — [ADR 0001](adr/0001-arquitetura-web-integrada.md) (Aceita); stack definida | [Opções de arquitetura](06-opcoes-de-arquitetura.md) | Alta | M |
 | HIST-FUND-002 | Inicializar projeto TypeScript, lint, format e CI mínima | Qualidade desde o início | Projeto compila; lint/format rodam; CI executa checks | HIST-FUND-001 | Alta | M |
 | HIST-FUND-003 | Definir ambientes dev/teste/produção separados | Segurança e isolamento | Configuração por ambiente; segredos fora do versionamento | HIST-FUND-001 | Alta | M |
+| HIST-FUND-004 | Modelo físico Prisma do MVP | Persistência do domínio | 🔎 **EM REVISÃO** — schema (17 models), migration inicial, constraints/índices, seed fictício idempotente, testes de contrato + integração PostgreSQL, CI com banco descartável; ADR [0002](adr/0002-modelo-fisico-prisma-mvp.md) (`Proposta`). Ver [docs/14](14-modelo-fisico-prisma.md) | HIST-QA-014; DEC-001/003/004/005/006/008/009 ✅ | Alta | G |
 
 ## Épico 2 — Autenticação e autorização (`AUTH`)
 
@@ -87,6 +88,7 @@
 | HIST-SEC-003 | Auditoria administrativa | Rastreabilidade | Ações relevantes registradas (imutável) | HIST-AUTH-002; `HIPÓTESE` | Média |
 | HIST-SEC-004 | Código de acesso seguro | Proteção da conta da criança | `access_code_hash` (sem texto puro/logs/query string); rate limiting; rotação/revogação; sem códigos triviais | DEC-001 ✅ | Alta (futura — **não concluída**) |
 | HIST-SEC-005 | Gate de câmera/galeria por consentimento | Proteção do menor | Câmera/galeria/upload bloqueados até responsável autenticado + consentimento | HIST-AUTH-004, HIST-SEC-001 | Alta (futura — **não concluída**) |
+| HIST-SEC-006 | **Encaminhamento jurídico** (DEC-002, DEC-010, DEC-017, DEC-018) | Conformidade LGPD | ⏳ **PENDENTE — a encaminhar** a especialista: validade do fluxo do responsável (DEC-002), consentimento/base legal/verificação (DEC-018), prazo/política de retenção (DEC-010), faixa etária (DEC-017). **Não iniciado por especialista.** Bloqueia lançamento com fotos | DEC-002/010/017/018 | Alta (bloqueio de lançamento — **não iniciada**) |
 
 ## Épico 10 — Qualidade e observabilidade (`QA`)
 

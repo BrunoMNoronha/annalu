@@ -1,13 +1,15 @@
-// Configuração inicial do Prisma para a arquitetura web integrada (ADR 0001).
+// Modelo físico do MVP — Annalú e os Tesouros Escondidos.
 //
-// IMPORTANTE: o modelo físico de domínio (criança, responsável, jogador,
-// rodada, resposta, avaliação, etc.) NÃO é definido nesta etapa, pois depende
-// de decisões de negócio ainda pendentes. Ver:
-//   - docs/07-modelo-de-dados-inicial.md  (modelo conceitual)
-//   - docs/12-decisoes-pendentes.md       (decisões que travam o modelo físico)
+// Reflete as decisões registradas em docs/13-pacote-decisoes-mvp.md e o modelo
+// conceitual em docs/07-modelo-de-dados-inicial.md. Detalhes em
+// docs/14-modelo-fisico-prisma.md e docs/adr/0002-modelo-fisico-prisma-mvp.md.
 //
-// Este arquivo mantém apenas o necessário para `prisma validate` e
-// `prisma generate`.
+// Convenções: models/campos em inglês; tabelas/colunas em snake_case (@@map/@map);
+// PK UUID; timestamps timestamptz; entidades append-only sem `updatedAt`.
+//
+// Constraints NÃO expressáveis no Prisma (checks, índice único parcial,
+// "exatamente um proprietário" de AuthIdentity) são adicionadas manualmente na
+// migration inicial. Ver docs/14.
 
 generator client {
   provider = "prisma-client-js"
@@ -16,4 +18,469 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ===================== Enums (conjuntos fechados no MVP) =====================
+
+enum PlayerStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum AccountStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+}
+
+enum AdminRole {
+  ADMIN
+}
+
+enum ConsentAction {
+  GRANTED
+  REVOKED
+}
+
+enum ContentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum GameSessionStatus {
+  CREATED
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum SessionChallengeState {
+  PENDING
+  ACTIVE
+  COMPLETE
+  SUBMITTED
+  SKIPPED
+  EXPIRED_INCOMPLETE
+}
+
+enum PlayerAnswerState {
+  DRAFT
+  COMPLETE
+  SUBMITTED
+  PRESERVED_AFTER_EXPIRATION
+  IN_EVALUATION
+}
+
+enum ImageLifecycleState {
+  RESERVED
+  UPLOADING
+  CONFIRMED
+  ASSOCIATED
+  ORPHAN_EXPIRED
+  DELETED
+}
+
+enum ImageDeletionState {
+  NOT_DELETED
+  DELETED
+}
+
+enum EvaluationResult {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum EvaluationAppliedResult {
+  APPROVED
+  REJECTED
+}
+
+enum EvaluationEventType {
+  INITIAL_DECISION
+  REVISION
+  CORRECTION
+}
+
+// ===================== Identidade e pessoas =====================
+
+// Criança jogadora (DEC-001). NÃO coletar e-mail/senha/nome/nascimento/idade/
+// documento/endereço da criança. Código de acesso é credencial: só o hash.
+model Player {
+  id             String       @id @default(uuid()) @db.Uuid
+  nickname       String
+  // Único quando presente (desambigua apelidos iguais); nunca é o código.
+  publicTag      String?      @unique @map("public_tag")
+  accessCodeHash String       @map("access_code_hash")
+  status         PlayerStatus @default(ACTIVE)
+  // Vínculo opcional até o gate de mídia. SetNull: remover responsável não apaga
+  // a criança (identidade de domínio própria).
+  guardianId     String?      @map("guardian_id") @db.Uuid
+  guardian       Guardian?    @relation(fields: [guardianId], references: [id], onDelete: SetNull)
+
+  gameSessions      GameSession[]
+  consentRecords    ConsentRecord[]
+  scoreTransactions ScoreTransaction[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([guardianId])
+  @@map("players")
+}
+
+// Responsável persistente (DEC-002, ⚠️ parcial/jurídico). Sem consentStatus: o
+// estado vigente do consentimento deriva de ConsentRecord.
+model Guardian {
+  id           String        @id @default(uuid()) @db.Uuid
+  contactEmail String?       @map("contact_email")
+  status       AccountStatus @default(ACTIVE)
+
+  players        Player[]
+  authIdentities AuthIdentity[]
+  consentRecords ConsentRecord[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("guardians")
+}
+
+// Identidade de autenticação de contas adultas (responsável ou admin). Não
+// substitui o UUID de domínio; NÃO armazena tokens (access/refresh/sessão).
+// Exatamente um proprietário (check SQL); no máx. um provedor por perfil
+// (índices únicos parciais na migration).
+model AuthIdentity {
+  id                 String        @id @default(uuid()) @db.Uuid
+  provider           AuthProvider
+  externalIdentifier String        @map("external_identifier")
+  status             AccountStatus @default(ACTIVE)
+
+  guardianId String?   @map("guardian_id") @db.Uuid
+  guardian   Guardian? @relation(fields: [guardianId], references: [id], onDelete: Cascade)
+
+  adminUserId String?    @map("admin_user_id") @db.Uuid
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  recordedConsents ConsentRecord[] @relation("ConsentRecordedBy")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([provider, externalIdentifier])
+  @@index([guardianId])
+  @@index([adminUserId])
+  @@map("auth_identities")
+}
+
+// Administrador. Autenticação via AuthIdentity (sem passwordHash obrigatório).
+model AdminUser {
+  id     String        @id @default(uuid()) @db.Uuid
+  role   AdminRole     @default(ADMIN)
+  status AccountStatus @default(ACTIVE)
+
+  authIdentities   AuthIdentity[]
+  evaluationEvents EvaluationEvent[]
+  auditLogs        AuditLog[]
+  createdWords     Word[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("admin_users")
+}
+
+// Consentimento append-only (DEC-018, ⚠️ jurídico). Sem updatedAt/deletedAt.
+// Não guarda o texto integral do termo nem cópias desnecessárias de dados.
+model ConsentRecord {
+  id          String        @id @default(uuid()) @db.Uuid
+  action      ConsentAction
+  termVersion String        @map("term_version")
+  source      String
+
+  guardianId String   @map("guardian_id") @db.Uuid
+  guardian   Guardian @relation(fields: [guardianId], references: [id], onDelete: Restrict)
+
+  playerId String @map("player_id") @db.Uuid
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Restrict)
+
+  // Identidade adulta que registrou o ato (opcional; SetNull preserva o registro).
+  recordedByAuthIdentityId String?       @map("recorded_by_auth_identity_id") @db.Uuid
+  recordedBy               AuthIdentity? @relation("ConsentRecordedBy", fields: [recordedByAuthIdentityId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([playerId, createdAt])
+  @@index([guardianId, createdAt])
+  @@map("consent_records")
+}
+
+// ===================== Conteúdo =====================
+
+model Word {
+  id     String        @id @default(uuid()) @db.Uuid
+  text   String
+  status ContentStatus @default(ACTIVE)
+
+  createdByAdminUserId String    @map("created_by_admin_user_id") @db.Uuid
+  createdBy            AdminUser @relation(fields: [createdByAdminUserId], references: [id], onDelete: Restrict)
+
+  riddles Riddle[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([status])
+  @@map("words")
+}
+
+model Riddle {
+  id     String        @id @default(uuid()) @db.Uuid
+  wordId String        @map("word_id") @db.Uuid
+  word   Word          @relation(fields: [wordId], references: [id], onDelete: Restrict)
+  prompt String
+  status ContentStatus @default(ACTIVE)
+
+  acceptedAnswers   AcceptedAnswer[]
+  sessionChallenges SessionChallenge[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([wordId])
+  @@map("riddles")
+}
+
+model AcceptedAnswer {
+  id             String @id @default(uuid()) @db.Uuid
+  riddleId       String @map("riddle_id") @db.Uuid
+  riddle         Riddle @relation(fields: [riddleId], references: [id], onDelete: Restrict)
+  text           String
+  normalizedText String @map("normalized_text")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Impede duplicar o mesmo texto normalizado na mesma charada.
+  @@unique([riddleId, normalizedText])
+  @@map("accepted_answers")
+}
+
+// ===================== Configuração e rodada =====================
+
+model GameConfiguration {
+  id                 String  @id @default(uuid()) @db.Uuid
+  pointsPerApproval  Int     @default(10) @map("points_per_approval")
+  uploadGraceSeconds Int     @default(60) @map("upload_grace_seconds")
+  challengesPerRound Int     @map("challenges_per_round")
+  timeLimitSeconds   Int     @map("time_limit_seconds")
+  isCurrent          Boolean @default(false) @map("is_current")
+
+  sessions GameSession[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("game_configurations")
+}
+
+model GameSession {
+  id     String            @id @default(uuid()) @db.Uuid
+  status GameSessionStatus @default(CREATED)
+
+  playerId String @map("player_id") @db.Uuid
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Restrict)
+
+  configurationId String            @map("configuration_id") @db.Uuid
+  configuration   GameConfiguration @relation(fields: [configurationId], references: [id], onDelete: Restrict)
+
+  // Snapshots obrigatórios (a regra da rodada usa estes valores, não a config).
+  pointsPerApprovalSnapshot  Int @map("points_per_approval_snapshot")
+  uploadGraceSecondsSnapshot Int @map("upload_grace_seconds_snapshot")
+  challengesCountSnapshot    Int @map("challenges_count_snapshot")
+  timeLimitSecondsSnapshot   Int @map("time_limit_seconds_snapshot")
+
+  startedAt DateTime? @map("started_at") @db.Timestamptz(6)
+  expiresAt DateTime? @map("expires_at") @db.Timestamptz(6)
+  endedAt   DateTime? @map("ended_at") @db.Timestamptz(6)
+
+  sessionChallenges SessionChallenge[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([playerId, status])
+  @@index([status, expiresAt])
+  @@index([configurationId])
+  @@map("game_sessions")
+}
+
+model SessionChallenge {
+  id       String @id @default(uuid()) @db.Uuid
+  position Int
+
+  sessionId String      @map("session_id") @db.Uuid
+  session   GameSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+
+  riddleId String @map("riddle_id") @db.Uuid
+  riddle   Riddle @relation(fields: [riddleId], references: [id], onDelete: Restrict)
+
+  state SessionChallengeState @default(PENDING)
+
+  playerAnswer PlayerAnswer?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([sessionId, position])
+  @@unique([sessionId, riddleId])
+  @@map("session_challenges")
+}
+
+model PlayerAnswer {
+  id String @id @default(uuid()) @db.Uuid
+
+  sessionChallengeId String           @unique @map("session_challenge_id") @db.Uuid
+  sessionChallenge   SessionChallenge @relation(fields: [sessionChallengeId], references: [id], onDelete: Restrict)
+
+  // Texto guardado mesmo quando incorreto; rascunho pode estar vazio.
+  answerText  String            @default("") @map("answer_text")
+  state       PlayerAnswerState @default(DRAFT)
+  submittedAt DateTime?         @map("submitted_at") @db.Timestamptz(6)
+
+  submittedImage SubmittedImage?
+  evaluation     Evaluation?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("player_answers")
+}
+
+// No máximo uma fotografia atual por resposta (playerAnswerId único). Nunca
+// armazena URL pública; apenas storageKey privado.
+model SubmittedImage {
+  id String @id @default(uuid()) @db.Uuid
+
+  playerAnswerId String       @unique @map("player_answer_id") @db.Uuid
+  playerAnswer   PlayerAnswer @relation(fields: [playerAnswerId], references: [id], onDelete: Restrict)
+
+  storageKey  String  @unique @map("storage_key")
+  contentType String? @map("content_type")
+  sizeBytes   Int?    @map("size_bytes")
+
+  lifecycleState ImageLifecycleState @default(RESERVED) @map("lifecycle_state")
+  exifStripped   Boolean             @default(false) @map("exif_stripped")
+
+  reservedAt  DateTime? @map("reserved_at") @db.Timestamptz(6)
+  confirmedAt DateTime? @map("confirmed_at") @db.Timestamptz(6)
+
+  // Retenção permanece OPCIONAL — sem default de 30 dias (prazo jurídico).
+  retentionUntil DateTime? @map("retention_until") @db.Timestamptz(6)
+
+  deletionState           ImageDeletionState @default(NOT_DELETED) @map("deletion_state")
+  deletedAt               DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  deletionReason          String?            @map("deletion_reason")
+  objectDeletionConfirmed Boolean            @default(false) @map("object_deletion_confirmed")
+  purgeAttempts           Int                @default(0) @map("purge_attempts")
+  purgeLastError          String?            @map("purge_last_error")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([lifecycleState])
+  @@index([retentionUntil])
+  @@map("submitted_images")
+}
+
+// ===================== Avaliação (por eventos) =====================
+
+// Agregado: pode existir PENDING sem nenhum evento (0:N EvaluationEvent).
+model Evaluation {
+  id String @id @default(uuid()) @db.Uuid
+
+  playerAnswerId String       @unique @map("player_answer_id") @db.Uuid
+  playerAnswer   PlayerAnswer @relation(fields: [playerAnswerId], references: [id], onDelete: Restrict)
+
+  currentResult EvaluationResult @default(PENDING) @map("current_result")
+
+  events EvaluationEvent[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("evaluations")
+}
+
+// Append-only (sem updatedAt). Cadeia linear via previousEventId único (impede
+// bifurcação). Não autorreferência (check SQL). "Mesma avaliação" fica como
+// invariante de serviço.
+model EvaluationEvent {
+  id String @id @default(uuid()) @db.Uuid
+
+  evaluationId String     @map("evaluation_id") @db.Uuid
+  evaluation   Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Restrict)
+
+  appliedResult EvaluationAppliedResult @map("applied_result")
+
+  adminUserId String    @map("admin_user_id") @db.Uuid
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
+
+  eventType EvaluationEventType @map("event_type")
+  reason    String?
+
+  previousEventId String?          @unique @map("previous_event_id") @db.Uuid
+  previousEvent   EvaluationEvent? @relation("EvaluationEventChain", fields: [previousEventId], references: [id], onDelete: Restrict)
+  nextEvent       EvaluationEvent? @relation("EvaluationEventChain")
+
+  scoreTransaction ScoreTransaction?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([evaluationId, createdAt])
+  @@map("evaluation_events")
+}
+
+// ===================== Pontuação e auditoria =====================
+
+// Idempotência por evaluationEventId (único): um evento -> no máx. uma transação.
+// Pontos nunca zero (check SQL). Append-only. Ranking deriva da soma.
+model ScoreTransaction {
+  id String @id @default(uuid()) @db.Uuid
+
+  playerId String @map("player_id") @db.Uuid
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Restrict)
+
+  evaluationEventId String          @unique @map("evaluation_event_id") @db.Uuid
+  evaluationEvent   EvaluationEvent @relation(fields: [evaluationEventId], references: [id], onDelete: Restrict)
+
+  points Int
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([playerId, createdAt])
+  @@map("score_transactions")
+}
+
+// Auditoria append-only. Sem JSON aberto; não guarda imagem/URL/segredo/token/
+// código de acesso.
+model AuditLog {
+  id String @id @default(uuid()) @db.Uuid
+
+  adminUserId String    @map("admin_user_id") @db.Uuid
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
+
+  action     String
+  targetType String @map("target_type")
+  targetId   String @map("target_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([adminUserId, createdAt])
+  @@map("audit_logs")
 }

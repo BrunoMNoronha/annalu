@@ -21,7 +21,19 @@
 
 - Alvo: interação entre camadas — persistência, repositórios, regras que tocam o
   banco.
-- Usar banco de teste isolado; dados fictícios.
+- Usar banco de teste **isolado e descartável**; dados fictícios.
+- **Modelo físico Prisma** ([docs/14](14-modelo-fisico-prisma.md)): a suíte
+  [`tests/integration/prisma/`](../tests/integration/prisma/) valida invariantes
+  garantidas pelo banco (unicidades, checks, "exatamente um proprietário",
+  configuração atual única, idempotência por `evaluationEventId`, `Evaluation
+  0:N EvaluationEvent`, etc.) e a idempotência do seed. Config separada em
+  `vitest.integration.config.ts` (não roda em `pnpm test:run`).
+- **Guard de segurança:** o helper só executa `TRUNCATE`/reset quando o nome do
+  banco contém `_test`/`test`/`integration`. **Nunca** `migrate reset`/
+  `db push --force-reset`/`DROP DATABASE` sem essa verificação.
+- **Contrato de schema (sem banco):** teste unitário que inspeciona o DMMF do
+  Prisma (models obrigatórios, ausência de `RankingEntry`, campos proibidos em
+  `Player`, `accessCodeHash`, etc.).
 
 ## 3. Testes de API
 
