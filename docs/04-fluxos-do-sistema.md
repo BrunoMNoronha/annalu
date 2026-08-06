@@ -3,6 +3,12 @@
 > Diagramas em Mermaid. Estados e transições marcados com `HIPÓTESE`/`PENDENTE`
 > dependem de decisões futuras (ver [decisões pendentes](12-decisoes-pendentes.md)).
 
+> **Fotografia obrigatória (CONFIRMADO — 1ª versão):** o envio de uma
+> participação exige uma **fotografia válida**; um rascunho pode existir sem
+> imagem, mas não é enviável sem ela (ver [RN-FOT-003](02-regras-de-negocio.md)).
+> O **comportamento da expiração** permanece `PENDENTE` além da preservação do
+> que já foi salvo (ver [DEC-009](13-pacote-decisoes-mvp.md#dec-009--comportamento-ao-expirar-a-rodada)).
+
 ## 1. Fluxo do jogador
 
 ```mermaid

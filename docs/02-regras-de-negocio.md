@@ -56,7 +56,8 @@
 | ------ | ----- | ------ |
 | RN-TMP-001 | O tempo limite vale para a sessão como um todo. | CONFIRMADO |
 | RN-TMP-002 | Ao expirar o tempo, a rodada é encerrada. | HIPÓTESE |
-| RN-TMP-003 | Comportamento das respostas não enviadas ao expirar (perdidas, salvas parciais, enviadas automaticamente) é definido. | PENDENTE |
+| RN-TMP-003 | Ao expirar, **o que já foi salvo deve ser preservado** (regra do briefing). | CONFIRMADO |
+| RN-TMP-004 | O **destino** das respostas ao expirar (completas enviadas automaticamente, incompletas como rascunho, retomada etc.) é definido. Ver [DEC-009](13-pacote-decisoes-mvp.md#dec-009--comportamento-ao-expirar-a-rodada). | PENDENTE |
 
 ## Fotografia (`RN-FOT`)
 
@@ -64,7 +65,7 @@
 | ------ | ----- | ------ |
 | RN-FOT-001 | A resposta pode incluir uma fotografia que represente a resposta. | CONFIRMADO |
 | RN-FOT-002 | Nesta versão, a fotografia **não** é analisada automaticamente. | CONFIRMADO |
-| RN-FOT-003 | A obrigatoriedade da fotografia para envio é definida. | PENDENTE |
+| RN-FOT-003 | A fotografia é **obrigatória para o envio** de uma participação na primeira versão. Uma resposta pode existir como **rascunho sem imagem**, mas **não pode ser enviada** para avaliação sem uma fotografia válida. (Opção futura de foto facultativa **não** aprovada.) | CONFIRMADO |
 | RN-FOT-004 | Fotografias são armazenadas de forma privada. | CONFIRMADO |
 | RN-FOT-005 | Tipos e tamanho de arquivo são validados. | CONFIRMADO |
 

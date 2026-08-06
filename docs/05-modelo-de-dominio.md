@@ -4,6 +4,12 @@
 > definitivas.** Este documento descreve responsabilidades e relacionamentos; o
 > detalhamento de campos está em [modelo de dados inicial](07-modelo-de-dados-inicial.md).
 
+> 📦 Decisões que ainda podem alterar entidades/cardinalidades (identificação,
+> responsável/consentimento, expiração, pontuação, desempate, retenção) estão
+> analisadas — com **recomendações NÃO APROVADAS** — em
+> [13 — Pacote de decisões do MVP](13-pacote-decisoes-mvp.md). Cardinalidades
+> definitivas **não** são alteradas aqui com base apenas em recomendações.
+
 ## Entidades propostas
 
 | Entidade | Responsabilidade | Status |
