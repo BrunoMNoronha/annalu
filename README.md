@@ -103,14 +103,30 @@ apenas estado e horário do servidor).
 | `pnpm typecheck` | Verificação de tipos (`tsc --noEmit`, modo estrito). |
 | `pnpm test` / `pnpm test:run` | Testes (Vitest) em modo watch / única execução. |
 | `pnpm build` | Build de produção do Next.js. |
+| `pnpm smoke:production` | Smoke test de produção (otimização de imagem / `sharp`). |
 | `pnpm format:check` / `pnpm format:write` | Prettier (código e configuração). |
 | `pnpm docs:check-links` | Verifica links Markdown relativos. |
 | `pnpm prisma:validate` / `pnpm prisma:generate` | Valida/gera o Prisma. |
-| `pnpm validate` | Agrega lint + typecheck + testes + links. |
+| `pnpm validate` | Agrega format:check + lint + typecheck + testes + links. |
 
 > `pnpm prisma:validate` precisa de `DATABASE_URL` definida (use um valor de
 > `.env`); o CI fornece um valor fictício apenas para resolver o `env()` do
 > datasource.
+
+## Windows e finais de linha
+
+O repositório padroniza **LF** para arquivos de texto por meio de
+[`.gitattributes`](.gitattributes) (`* text=auto eol=lf`); binários (imagens,
+fontes) são preservados.
+
+- **Não** é necessário alterar a configuração global do Git (ex.:
+  `core.autocrlf`); a regra `eol=lf` do `.gitattributes` prevalece no checkout.
+- Checkouts antigos, criados antes da adoção do `.gitattributes`, podem manter
+  arquivos já materializados em CRLF. Preserve qualquer trabalho local e
+  confirme que `git status` está limpo. A opção recomendada é criar um clone
+  novo do repositório. Não use `reset --hard`, `git clean` nem apague arquivos
+  rastreados apenas para normalizar finais de linha.
+- **`pnpm format:check` é o gate oficial** de formatação (mesmo comando do CI).
 
 ## Estrutura resumida
 
