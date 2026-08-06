@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+pnpm-lock.yaml
+src/generated/
+next-env.d.ts
+
+# A prosa Markdown (documentação) é mantida manualmente, não pelo Prettier,
+# para preservar a formatação autoral de tabelas e quebras de linha.
+**/*.md
+
