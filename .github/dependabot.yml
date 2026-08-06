@@ -11,20 +11,17 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - 'dependencies'
-    # Agrupa patch/minor seguros em um único PR; major fica separado para
-    # revisão humana (ver docs/08-seguranca-e-privacidade.md).
+    # Comportamento (ver docs/08-seguranca-e-privacidade.md):
+    # - patch/minor são AGRUPADOS em um único PR;
+    # - major NÃO entra no grupo, logo abre em PR SEPARADO;
+    # - nenhuma atualização é mesclada automaticamente (sem auto-merge);
+    # - major exige revisão humana (notas de migração, breaking changes).
     groups:
       patch-and-minor:
         applies-to: version-updates
         update-types:
           - 'patch'
           - 'minor'
-    ignore:
-      # Atualizações major exigem revisão humana dedicada (notas de migração,
-      # verificação de breaking changes). Não são abertas automaticamente aqui.
-      - dependency-name: '*'
-        update-types:
-          - 'version-update:semver-major'
 
   # Ações do GitHub usadas no workflow de CI.
   - package-ecosystem: 'github-actions'

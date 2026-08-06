@@ -68,11 +68,14 @@ export function createLogger(options: CreateLoggerOptions = {}): Logger {
 
   function write(level: LogLevel, message: string, fields?: LogFields): void {
     if (LEVEL_ORDER[level] < minLevel) return;
+    // Campos extras são espalhados PRIMEIRO; os campos canônicos (level, time,
+    // message) são definidos DEPOIS, garantindo que nunca sejam sobrescritos
+    // por chaves homônimas vindas de `fields`.
     const entry = {
+      ...(fields ? redact(fields) : {}),
       level,
       time: now().toISOString(),
       message,
-      ...(fields ? redact(fields) : {}),
     };
     sink(JSON.stringify(entry));
   }

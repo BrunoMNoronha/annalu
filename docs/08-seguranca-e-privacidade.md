@@ -126,12 +126,37 @@ severidade; ou ignorar um advisory sem justificativa registrada.
 
 **`overrides` de segurança** são permitidos apenas para elevar dependências
 **transitivas** a versões corrigidas **compatíveis** (patch/minor no mesmo
-major), com justificativa. As atualizações são monitoradas pelo Dependabot
-([`.github/dependabot.yml`](../.github/dependabot.yml)).
+major), com justificativa. Overrides que saem da faixa declarada pela
+dependência direta (ex.: `sharp`, ver seção 11.2) são tratados como **risco
+técnico controlado** e exigem verificação automatizada.
+
+**Dependabot** ([`.github/dependabot.yml`](../.github/dependabot.yml)) monitora
+atualizações: **patch/minor** são agrupados em um único PR; **major** abre em
+**PR separado**; **nenhuma** atualização tem auto-merge.
 
 **Revisão humana:** atualizações **major** sensíveis (ex.: Next.js, React,
 Prisma, Vitest) exigem revisão humana — notas de migração e verificação de
 breaking changes — e **não** são mescladas automaticamente.
+
+## 11.2. Override temporário de `sharp` (risco técnico controlado)
+
+- **Faixa declarada pelo Next.js 15.5.22:** `sharp@^0.34.3`.
+- **Versão forçada no projeto:** `sharp >=0.35.0` (via `pnpm.overrides`), para
+  eliminar a vulnerabilidade alta `GHSA-f88m-g3jw-g9cj`.
+- **Natureza:** o override está **fora** da faixa originalmente declarada pelo
+  framework. Portanto **não** é automaticamente compatível — é um **risco
+  técnico controlado e monitorado**, não um risco inexistente.
+- **Controle:** a compatibilidade é validada por um **smoke test de produção**
+  ([`scripts/smoke-production.mjs`](../scripts/smoke-production.mjs), script
+  `smoke:production`) que sobe `next start` e exercita a rota de otimização de
+  imagem (`/_next/image`) com a versão de `sharp` resolvida. O CI executa esse
+  teste após o build; se a otimização falhar, o CI falha.
+- **Condição de remoção:** o override deve ser **removido** quando uma versão
+  **estável** adotada do Next.js declarar uma faixa de `sharp` que já inclua a
+  correção (`>=0.35.0`). Não migrar para versões beta/preview/RC/canary.
+- **Manutenção:** toda atualização futura de `next` ou `sharp` deve
+  **reexecutar** a auditoria (`pnpm audit`) e o smoke test de produção antes de
+  aceitar a mudança.
 
 ## 12. Revisão jurídica (registro)
 
