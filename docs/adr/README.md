@@ -4,10 +4,10 @@ Este diretório guarda as **decisões arquiteturais** do projeto **Annalú e os
 Tesouros Escondidos**. Uma ADR documenta uma decisão relevante, seu contexto e
 suas consequências, de forma imutável no tempo.
 
-> ⚠️ **Nenhuma decisão arquitetural foi aprovada até o momento.** As alternativas
-> em [../06-opcoes-de-arquitetura.md](../06-opcoes-de-arquitetura.md) são
-> **propostas**. Só registre uma ADR com status `Aprovada` após autorização
-> explícita do orquestrador. Escolhas ainda não aprovadas permanecem em
+> A primeira decisão arquitetural já foi registrada em
+> [0001-arquitetura-web-integrada.md](0001-arquitetura-web-integrada.md) (status
+> `Aceita`). Só registre uma ADR com status `Aceita` após autorização explícita
+> do orquestrador. Escolhas ainda não aprovadas permanecem em
 > [../12-decisoes-pendentes.md](../12-decisoes-pendentes.md).
 
 ## Quando criar uma ADR
@@ -27,7 +27,7 @@ Decisões pequenas e locais **não** precisam de ADR.
 2. Nomeie como `NNNN-titulo-curto.md`, com número sequencial de 4 dígitos
    (ex.: `0001-escolha-de-framework.md`).
 3. Preencha todos os campos.
-4. Comece com status `Proposta`; mude para `Aprovada` somente após autorização.
+4. Comece com status `Proposta`; mude para `Aceita` somente após autorização.
 5. Ao aprovar, atualize os documentos relacionados e remova/resolva o item
    correspondente em [decisões pendentes](../12-decisoes-pendentes.md).
 6. ADRs são **imutáveis** após aprovadas: para mudar uma decisão, crie uma nova
@@ -36,24 +36,22 @@ Decisões pequenas e locais **não** precisam de ADR.
 ## Status possíveis
 
 - `Proposta` — em discussão, ainda não aprovada.
-- `Aprovada` — decisão vigente.
+- `Aceita` — decisão aprovada e vigente.
 - `Rejeitada` — considerada e descartada.
 - `Substituída` — superada por outra ADR (referenciar a substituta).
 
 ## Índice de ADRs
 
-_(vazio — nenhuma ADR registrada até o momento)_
-
 | Número | Título | Status | Data |
 | ------ | ------ | ------ | ---- |
-| — | — | — | — |
+| [0001](0001-arquitetura-web-integrada.md) | Arquitetura web integrada | Aceita | 2026-08-05 |
 
 ## Modelo de ADR
 
 ```markdown
 # NNNN — Título da decisão
 
-- **Status:** Proposta | Aprovada | Rejeitada | Substituída
+- **Status:** Proposta | Aceita | Rejeitada | Substituída
 - **Data:** AAAA-MM-DD
 - **Decisores:** (quem aprovou)
 - **Substitui:** (ADR anterior, se houver)

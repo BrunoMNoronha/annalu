@@ -1,10 +1,10 @@
 # 06 — Opções de arquitetura
 
-> **Nenhuma decisão de arquitetura foi tomada.** Este documento compara
-> alternativas para uma aplicação **TypeScript, mobile first**. A recomendação
-> ao final é uma **proposta pendente de aprovação**. Ver
-> [decisões pendentes](12-decisoes-pendentes.md) e o guia de
-> [ADR](adr/README.md).
+> ✅ **Decisão tomada.** A **Alternativa A (arquitetura web integrada)** foi
+> aceita na ADR [0001](adr/0001-arquitetura-web-integrada.md) (status `Aceita`,
+> 2026-08-05). Este documento é mantido como registro comparativo das
+> alternativas que embasaram a decisão. Ver
+> [decisões pendentes](12-decisoes-pendentes.md) para os itens ainda em aberto.
 
 ## Requisitos que a arquitetura deve atender
 
@@ -68,19 +68,22 @@ armazenamento de objetos (S3-compatível), com contratos de API explícitos.
 
 ## Temas transversais (independentes da escolha)
 
-- **Linguagem:** TypeScript em todo o stack.
-- **Banco:** relacional (PostgreSQL como candidato) — provedor `PENDENTE`.
-- **Armazenamento de imagens:** objetos privados com URLs assinadas — provedor
-  `PENDENTE`.
+- **Linguagem:** TypeScript em todo o stack (`CONFIRMADO` — ADR 0001).
+- **Banco:** PostgreSQL com Prisma (`CONFIRMADO` — ADR 0001); **provedor
+  gerenciado** concreto ainda `PENDENTE`.
+- **Armazenamento de imagens:** objetos privados compatíveis com S3, via
+  abstração interna (`CONFIRMADO` — ADR 0001); **provedor concreto** `PENDENTE`.
 - **Autenticação administrativa:** por papel; solução `PENDENTE`.
 - **PWA:** `PENDENTE` (afeta câmera offline e instalação).
 
-## Recomendação preliminar (PROPOSTA PENDENTE DE APROVAÇÃO)
+## Decisão (ACEITA — ADR 0001)
 
-> ⚠️ **PROPOSTA — NÃO APROVADA.** Sujeita à validação do orquestrador.
+> ✅ **DECISÃO ACEITA.** Formalizada na ADR
+> [0001-arquitetura-web-integrada.md](adr/0001-arquitetura-web-integrada.md).
 
-Para a primeira versão, recomenda-se a **Alternativa A (solução integrada,
-p.ex. Next.js + PostgreSQL + ORM + armazenamento de objetos)**, porque:
+Para a primeira versão, foi escolhida a **Alternativa A (solução integrada:
+Next.js + App Router + TypeScript + PostgreSQL + Prisma + armazenamento
+compatível com S3 via abstração interna)**, porque:
 
 1. Reduz complexidade e acelera o MVP.
 2. Entrega experiência mobile forte com menos esforço.
@@ -88,8 +91,8 @@ p.ex. Next.js + PostgreSQL + ORM + armazenamento de objetos)**, porque:
    superfície de integração.
 4. Preserva evolução: serviços podem ser extraídos depois, se necessário.
 
-A decisão só se torna definitiva mediante **ADR aprovada** (ver
-[adr/README.md](adr/README.md)).
+Itens ainda em aberto (provedor de armazenamento concreto, hospedagem, PWA)
+permanecem em [decisões pendentes](12-decisoes-pendentes.md).
 
 ## Referências cruzadas
 

@@ -1,0 +1,19 @@
+// Configuração inicial do Prisma para a arquitetura web integrada (ADR 0001).
+//
+// IMPORTANTE: o modelo físico de domínio (criança, responsável, jogador,
+// rodada, resposta, avaliação, etc.) NÃO é definido nesta etapa, pois depende
+// de decisões de negócio ainda pendentes. Ver:
+//   - docs/07-modelo-de-dados-inicial.md  (modelo conceitual)
+//   - docs/12-decisoes-pendentes.md       (decisões que travam o modelo físico)
+//
+// Este arquivo mantém apenas o necessário para `prisma validate` e
+// `prisma generate`.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}

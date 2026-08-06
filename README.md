@@ -1,9 +1,9 @@
 # Annalú e os Tesouros Escondidos
 
-> ⚠️ **Aviso:** a aplicação ainda está em **fase de definição**. Nenhum código de
-> frontend, backend, banco de dados ou infraestrutura foi implementado. Este
-> repositório contém, neste momento, apenas a **fundação documental** que
-> orientará a implementação futura.
+> ⚠️ **Aviso:** a aplicação está na **fundação técnica**. A arquitetura já foi
+> decidida (ver [ADR 0001](docs/adr/0001-arquitetura-web-integrada.md)), mas
+> **nenhuma funcionalidade de negócio** (cadastro, rodadas, charadas, upload de
+> imagens, avaliação, pontuação, ranking) foi implementada.
 
 ## Resumo do produto
 
@@ -31,49 +31,141 @@ Resposta: Copo.
 
 ## Estado atual
 
-| Item                       | Estado                         |
-| -------------------------- | ------------------------------ |
-| Documentação de fundação   | Em elaboração / primeira versão |
-| Arquitetura definida       | Não (opções em análise)        |
-| Framework escolhido        | Não (decisão pendente)         |
-| Código de aplicação        | Não iniciado                   |
-| Modelo de dados físico     | Não iniciado (apenas conceitual) |
+| Item                      | Estado                                                    |
+| ------------------------- | -------------------------------------------------------- |
+| Documentação de fundação  | Consolidada (commit próprio)                             |
+| Arquitetura               | **Decidida** — web integrada ([ADR 0001](docs/adr/0001-arquitetura-web-integrada.md)) |
+| Fundação técnica          | Inicializada (Next.js + TypeScript estrito + Prisma)     |
+| Modelo de dados físico    | Não iniciado (apenas conceitual; aguarda decisões)       |
+| Funcionalidades do jogo   | Não implementadas                                        |
 
-## Estrutura da documentação
+## Stack (ADR 0001)
 
-Toda a documentação vive em [`docs/`](docs/). Ordem sugerida de leitura:
+TypeScript · Next.js (App Router) · PostgreSQL · Prisma · armazenamento
+compatível com S3 (via abstração interna) · Zod · pnpm · Vitest · Testing
+Library · ESLint · GitHub Actions. Arquitetura modular em uma única aplicação.
 
-| # | Documento | Descrição |
-| - | --------- | --------- |
-| 00 | [Visão do produto](docs/00-visao-do-produto.md) | Problema, proposta de valor, público, escopo |
-| 01 | [Escopo e requisitos](docs/01-escopo-e-requisitos.md) | Requisitos funcionais e não funcionais |
-| 02 | [Regras de negócio](docs/02-regras-de-negocio.md) | Regras confirmadas e hipóteses |
-| 03 | [Personas e jornadas](docs/03-personas-e-jornadas.md) | Atores e fluxos de uso |
-| 04 | [Fluxos do sistema](docs/04-fluxos-do-sistema.md) | Diagramas de fluxo e estados |
-| 05 | [Modelo de domínio](docs/05-modelo-de-dominio.md) | Entidades e relacionamentos |
-| 06 | [Opções de arquitetura](docs/06-opcoes-de-arquitetura.md) | Comparação de alternativas |
-| 07 | [Modelo de dados inicial](docs/07-modelo-de-dados-inicial.md) | Modelo conceitual e diagrama ER |
-| 08 | [Segurança e privacidade](docs/08-seguranca-e-privacidade.md) | LGPD, crianças, imagens |
-| 09 | [Experiência mobile](docs/09-experiencia-mobile.md) | Mobile first, câmera, acessibilidade |
-| 10 | [Estratégia de testes](docs/10-estrategia-de-testes.md) | Tipos e escopos de teste |
-| 11 | [Backlog inicial](docs/11-backlog-inicial.md) | Épicos e histórias |
-| 12 | [Decisões pendentes](docs/12-decisoes-pendentes.md) | O que ainda precisa ser decidido |
-|    | [ADR](docs/adr/README.md) | Guia de decisões arquiteturais |
+## Pré-requisitos
+
+- **Node.js**: versão LTS indicada em [`.nvmrc`](.nvmrc) (Node 22). O runtime de
+  desenvolvimento também funciona em versões mais novas compatíveis.
+- **pnpm 9** via Corepack (recomendado):
+
+```bash
+corepack enable
+```
+
+  Caso não seja possível ativar o shim global do `pnpm`, use `corepack pnpm`
+  como prefixo dos comandos abaixo.
+- **PostgreSQL** (apenas quando o modelo de dados começar a ser usado; não é
+  necessário para rodar a fundação atual).
+
+## Instalação
+
+```bash
+pnpm install --frozen-lockfile
+```
+
+## Configuração de ambiente
+
+Copie o exemplo e ajuste os valores locais:
+
+```bash
+cp .env.example .env
+```
+
+As variáveis são validadas de forma tipada (Zod) em
+[`src/shared/config/env.ts`](src/shared/config/env.ts). Variáveis documentadas:
+
+- `DATABASE_URL` — conexão PostgreSQL (Prisma).
+- `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`,
+  `S3_SECRET_ACCESS_KEY` — armazenamento privado compatível com S3.
+- `LOG_LEVEL` — `debug` | `info` | `warn` | `error`.
+- `NEXT_PUBLIC_APP_URL` — URL pública da aplicação.
+
+> ⚠️ **Nunca** commite o arquivo `.env` nem credenciais reais. O `.env.example`
+> contém apenas valores **fictícios**.
+
+## Execução local
+
+```bash
+pnpm dev
+```
+
+Acesse `http://localhost:3000`. Verificação de saúde: `GET /api/health` (retorna
+apenas estado e horário do servidor).
+
+## Comandos de validação
+
+| Comando | Descrição |
+| ------- | --------- |
+| `pnpm lint` | ESLint (via `next lint`). |
+| `pnpm typecheck` | Verificação de tipos (`tsc --noEmit`, modo estrito). |
+| `pnpm test` / `pnpm test:run` | Testes (Vitest) em modo watch / única execução. |
+| `pnpm build` | Build de produção do Next.js. |
+| `pnpm format:check` / `pnpm format:write` | Prettier (código e configuração). |
+| `pnpm docs:check-links` | Verifica links Markdown relativos. |
+| `pnpm prisma:validate` / `pnpm prisma:generate` | Valida/gera o Prisma. |
+| `pnpm validate` | Agrega lint + typecheck + testes + links. |
+
+> `pnpm prisma:validate` precisa de `DATABASE_URL` definida (use um valor de
+> `.env`); o CI fornece um valor fictício apenas para resolver o `env()` do
+> datasource.
+
+## Estrutura resumida
+
+```text
+src/
+  app/            Apresentação (Next.js App Router): layout, página, /api/health
+  components/     Componentes de apresentação sem regra de negócio
+  modules/        Módulos de domínio + casos de uso (ex.: system)
+  server/         Composição/serviços do lado servidor
+  infrastructure/ Prisma e abstração de armazenamento (S3)
+  shared/         Config (env), logger estruturado, relógio
+prisma/           schema.prisma (datasource + generator; sem modelo de domínio)
+scripts/          check-links.mjs (verificação de documentação)
+docs/             Documentação do produto e ADRs
+.github/workflows CI (GitHub Actions)
+```
+
+## Funcionalidades ainda NÃO implementadas
+
+Identificação de criança · cadastro/consentimento de responsável · cadastro de
+palavras/charadas · configuração de rodada · seleção aleatória · fluxo da
+rodada · **upload real de imagens** · avaliação administrativa · autenticação ·
+pontuação · ranking · modelo físico de dados. Ver
+[backlog](docs/11-backlog-inicial.md) e
+[decisões pendentes](docs/12-decisoes-pendentes.md).
+
+## Documentação
+
+Ordem sugerida de leitura em [`docs/`](docs/):
+
+| # | Documento |
+| - | --------- |
+| 00 | [Visão do produto](docs/00-visao-do-produto.md) |
+| 01 | [Escopo e requisitos](docs/01-escopo-e-requisitos.md) |
+| 02 | [Regras de negócio](docs/02-regras-de-negocio.md) |
+| 03 | [Personas e jornadas](docs/03-personas-e-jornadas.md) |
+| 04 | [Fluxos do sistema](docs/04-fluxos-do-sistema.md) |
+| 05 | [Modelo de domínio](docs/05-modelo-de-dominio.md) |
+| 06 | [Opções de arquitetura](docs/06-opcoes-de-arquitetura.md) |
+| 07 | [Modelo de dados inicial](docs/07-modelo-de-dados-inicial.md) |
+| 08 | [Segurança e privacidade](docs/08-seguranca-e-privacidade.md) |
+| 09 | [Experiência mobile](docs/09-experiencia-mobile.md) |
+| 10 | [Estratégia de testes](docs/10-estrategia-de-testes.md) |
+| 11 | [Backlog inicial](docs/11-backlog-inicial.md) |
+| 12 | [Decisões pendentes](docs/12-decisoes-pendentes.md) |
+|    | [ADR](docs/adr/README.md) · [ADR 0001](docs/adr/0001-arquitetura-web-integrada.md) |
 
 ## Como agentes devem iniciar uma tarefa
 
-Antes de qualquer coisa, leia [`AGENTS.md`](AGENTS.md). Em resumo:
-
-1. Leia [`AGENTS.md`](AGENTS.md) e a documentação relevante em [`docs/`](docs/).
-2. Confirme o escopo da tarefa recebida e o que está **fora** do escopo.
-3. Diferencie **fatos confirmados** de **hipóteses** e **decisões pendentes**.
-4. Não invente requisitos como se tivessem sido aprovados.
-5. Atualize a documentação quando o entendimento evoluir.
-6. Respeite as restrições de Git (ver `AGENTS.md`).
-7. Ao concluir, entregue o relatório no formato exigido em `AGENTS.md`.
+Antes de qualquer coisa, leia [`AGENTS.md`](AGENTS.md). Em resumo: confirme o
+escopo, diferencie fatos confirmados de hipóteses e decisões pendentes, não
+invente requisitos, atualize a documentação e respeite as restrições de Git.
 
 ## Convenções
 
-- Documentação em **português**, formato **Markdown**.
-- **Links relativos** entre documentos.
+- Documentação em **português**, formato **Markdown**, com **links relativos**.
 - Marcação explícita de `CONFIRMADO`, `HIPÓTESE` e `PENDENTE`.
+- **Nenhuma credencial** deve ser commitada em hipótese alguma.

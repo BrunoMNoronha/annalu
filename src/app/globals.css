@@ -1,0 +1,65 @@
+/* Estilos globais mínimos — mobile first, sem bibliotecas visuais pesadas. */
+
+:root {
+  --cor-fundo: #f7f9f8;
+  --cor-texto: #17241f;
+  --cor-primaria: #1f5c4d;
+  --cor-borda: #d7e2dd;
+  --espaco: 1rem;
+  --raio: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --cor-fundo: #0f1613;
+    --cor-texto: #eef4f1;
+    --cor-primaria: #7ec9b2;
+    --cor-borda: #24352e;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Alvos de toque confortáveis (mínimo ~44px) e foco visível para acessibilidade. */
+a,
+button {
+  min-height: 44px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--cor-primaria);
+  outline-offset: 2px;
+}
+
+.container {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: calc(var(--espaco) * 1.5) var(--espaco);
+}
+
+.cartao {
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: var(--espaco);
+}

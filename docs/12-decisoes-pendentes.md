@@ -18,9 +18,9 @@
 | DEC-008 | **Possibilidade de pular uma charada** | Afeta fluxo e pontuação | Permitir · não permitir · permitir com penalidade | PENDENTE |
 | DEC-009 | **Comportamento ao terminar o tempo** | Afeta estados de rodada/resposta | Encerra e descarta pendentes · envia o que houver · salva parcial | PENDENTE |
 | DEC-010 | **Retenção das imagens** | Afeta privacidade e custo de storage | Prazo fixo · até exclusão manual · pós-avaliação | PENDENTE |
-| DEC-011 | **Framework** | Base da arquitetura | Integrada (Next.js) · separada (React + API Node) | PENDENTE (proposta preliminar: integrada) |
-| DEC-012 | **Provedor de banco de dados** | Persistência | PostgreSQL gerenciado · outro relacional | PENDENTE |
-| DEC-013 | **Provedor de armazenamento** | Imagens privadas | S3-compatível · outro | PENDENTE |
+| DEC-011 | **Framework** | Base da arquitetura | Integrada (Next.js) · separada (React + API Node) | ✅ RESOLVIDA — Integrada (Next.js + App Router). Ver [ADR 0001](adr/0001-arquitetura-web-integrada.md) |
+| DEC-012 | **Provedor de banco de dados** | Persistência | PostgreSQL gerenciado · outro relacional | ⚠️ PARCIAL — SGBD definido: **PostgreSQL + Prisma** ([ADR 0001](adr/0001-arquitetura-web-integrada.md)). Provedor gerenciado concreto: PENDENTE |
+| DEC-013 | **Provedor de armazenamento** | Imagens privadas | S3-compatível · outro | ⚠️ PARCIAL — **compatível com S3 via abstração interna** definido ([ADR 0001](adr/0001-arquitetura-web-integrada.md)). Provedor concreto: PENDENTE |
 | DEC-014 | **Hospedagem** | Deploy e custos | Plataforma gerenciada · container self-host | PENDENTE |
 | DEC-015 | **PWA** | Instalação/offline/câmera | Sim · não · depois | PENDENTE |
 | DEC-016 | **Moderação de conteúdo** | Além da avaliação por rodada | Só humana (atual) · filtros adicionais | PENDENTE |

@@ -1,0 +1,34 @@
+# Dependências
+node_modules/
+.pnpm-store/
+
+# Build / saída
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# Testes / cobertura
+coverage/
+
+# Ambiente (NUNCA commitar segredos)
+.env
+.env.*
+!.env.example
+
+# Prisma (cliente gerado)
+/src/generated/
+prisma/generated/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Sistema operacional / editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

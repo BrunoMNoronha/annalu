@@ -10,7 +10,7 @@
 
 | Código | Descrição | Valor | Critérios de aceitação | Dependências | Prioridade | Tamanho |
 | ------ | --------- | ----- | ---------------------- | ------------ | ---------- | ------- |
-| HIST-FUND-001 | Escolher e registrar arquitetura via ADR | Base para todo o desenvolvimento | ADR aprovada em [adr/](adr/README.md); stack definida | [Opções de arquitetura](06-opcoes-de-arquitetura.md) | Alta | M |
+| HIST-FUND-001 | Escolher e registrar arquitetura via ADR | Base para todo o desenvolvimento | ✅ CONCLUÍDA — [ADR 0001](adr/0001-arquitetura-web-integrada.md) (Aceita); stack definida | [Opções de arquitetura](06-opcoes-de-arquitetura.md) | Alta | M |
 | HIST-FUND-002 | Inicializar projeto TypeScript, lint, format e CI mínima | Qualidade desde o início | Projeto compila; lint/format rodam; CI executa checks | HIST-FUND-001 | Alta | M |
 | HIST-FUND-003 | Definir ambientes dev/teste/produção separados | Segurança e isolamento | Configuração por ambiente; segredos fora do versionamento | HIST-FUND-001 | Alta | M |
 
