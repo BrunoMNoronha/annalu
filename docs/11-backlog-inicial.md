@@ -20,7 +20,8 @@
 | ------ | --------- | ----- | ---------------------- | ------------ | ---------- |
 | HIST-AUTH-001 | Login do administrador | Acesso controlado ao painel | Admin autentica; sessão segura | HIST-FUND-002 | Alta |
 | HIST-AUTH-002 | Autorização por papel (RBAC) | Menor privilégio | Rotas admin exigem papel; negação por padrão | HIST-AUTH-001 | Alta |
-| HIST-AUTH-003 | Identificação do jogador | Associar rodadas ao jogador | Jogador identificado conforme decisão | Decisão de identificação `PENDENTE` | Alta |
+| HIST-AUTH-003 | Identificação do jogador (apelido + código de acesso) | Associar rodadas ao jogador | Jogador com UUID interno + apelido; código = credencial (`access_code_hash`) | DEC-001 ✅ | Alta |
+| HIST-AUTH-004 | Login de contas adultas por e-mail ou Google | Autenticar responsável/admin | Responsável entra por e-mail (link/código) ou Google; criança **não** usa e-mail/Google; identidade externa **não** substitui o UUID interno; contas podem ser desativadas; nenhuma credencial de provedor armazenada indevidamente; autorização admin continua por papel | HIST-AUTH-001 | Alta (futura — **não concluída**) |
 
 ## Épico 3 — Gestão de palavras e charadas (`CONT`)
 
@@ -28,7 +29,7 @@
 | ------ | --------- | ----- | ---------------------- | ------------ | ---------- |
 | HIST-CONT-001 | CRUD de palavras | Acervo de conteúdo | Criar/editar/desativar palavra | HIST-AUTH-002 | Alta |
 | HIST-CONT-002 | CRUD de charadas por palavra | Conteúdo jogável | Charada vinculada a palavra; enunciado | HIST-CONT-001 | Alta |
-| HIST-CONT-003 | Respostas aceitas por charada | Base para avaliação | Uma ou mais respostas aceitas | HIST-CONT-002; múltiplas respostas `PENDENTE` | Alta |
+| HIST-CONT-003 | Respostas aceitas por charada | Base para avaliação | Uma ou mais respostas aceitas (relação **1:N**) | HIST-CONT-002; DEC-005 ✅ | Alta |
 | HIST-CONT-004 | Ativar/desativar conteúdo | Curadoria | Só ativos entram no sorteio | HIST-CONT-002 | Média |
 
 ## Épico 4 — Configuração do jogo (`CFG`)
@@ -58,6 +59,8 @@
 | HIST-IMG-003 | Validar tipo e tamanho | Segurança | Rejeita tipo/tamanho inválido | HIST-IMG-001 | Alta |
 | HIST-IMG-004 | Upload privado + progresso | Segurança e UX | Objeto privado; feedback de progresso | HIST-FUND-003 | Alta |
 | HIST-IMG-005 | Compressão e remoção de EXIF | Privacidade/perf | Imagem otimizada; EXIF sensível removido | HIST-IMG-004; `HIPÓTESE` | Média |
+| HIST-IMG-006 | Expiração idempotente da rodada | Regra de expiração (DEC-009) | Envia só completas uma única vez; texto sem foto vira histórico; tolerância de upload `upload_grace_seconds` (60 s) copiada na rodada | HIST-ROUND-003, HIST-IMG-004 | Alta (futura — **não concluída**) |
+| HIST-IMG-007 | Limpeza de uploads órfãos | Privacidade e custo | Objeto de upload não confirmado dentro da tolerância é removido; resposta permanece incompleta | HIST-IMG-006 | Média (futura — **não concluída**) |
 
 ## Épico 7 — Avaliação administrativa (`EVAL`)
 
@@ -71,17 +74,19 @@
 
 | Código | Descrição | Valor | Critérios de aceitação | Dependências | Prioridade |
 | ------ | --------- | ----- | ---------------------- | ------------ | ---------- |
-| HIST-SCORE-001 | Conceder pontos ao aprovar | Recompensa | Só aprovadas geram pontos (transação) | HIST-EVAL-003; regra `PENDENTE` | Alta |
-| HIST-SCORE-002 | Ranking ordenado | Engajamento | Ordena por pontuação validada | HIST-SCORE-001 | Alta |
-| HIST-SCORE-003 | Desempate | Justiça | Aplica critério definido | Critério `PENDENTE` | Média |
+| HIST-SCORE-001 | Conceder pontos ao aprovar | Recompensa | Pontos fixos (padrão 10, configurável, snapshot na rodada); só aprovadas geram pontos; idempotência por **`evaluation_event_id`** (um `EvaluationEvent` → no máx. 1 transação) | HIST-EVAL-003; DEC-003 ✅ | Alta (futura — **não concluída**) |
+| HIST-SCORE-002 | Ranking denso | Engajamento e justiça | Ordena por total validado; empatados compartilham posição; UUID só p/ ordenação técnica | HIST-SCORE-001; DEC-004 ✅ | Alta (futura — **não concluída**) |
+| HIST-SCORE-003 | Transações compensatórias na reavaliação | Rastreabilidade | Reversão cria transação negativa (motivo/autor/data); histórico preservado; total recalculado | HIST-SCORE-001; DEC-003 ✅ | Média (futura — **não concluída**) |
 
 ## Épico 9 — Segurança e privacidade (`SEC`)
 
 | Código | Descrição | Valor | Critérios de aceitação | Dependências | Prioridade |
 | ------ | --------- | ----- | ---------------------- | ------------ | ---------- |
-| HIST-SEC-001 | Consentimento (responsável) | Conformidade LGPD | Consentimento registrado e revogável | Consentimento `PENDENTE` | Alta |
-| HIST-SEC-002 | Retenção e exclusão de imagens | Conformidade | Política aplicada; exclusão remove objeto | Prazos `PENDENTE` | Média |
+| HIST-SEC-001 | Consentimento versionado e revogável (`ConsentRecord`) | Conformidade LGPD | Registro append-only (versão/data/origem/escopo); estado derivado do histórico; revogação bloqueia captura/upload e aciona retenção | DEC-018 ⚠️ PARCIAL; **revisão jurídica** | Alta (futura — **não concluída**) |
+| HIST-SEC-002 | Retenção configurável e exclusão de imagens | Conformidade | `retention_until`, expurgo do objeto, confirmação e falhas, auditoria sem imagem | DEC-010 ⚠️ PARCIAL; **prazo jurídico** | Média (futura — **não concluída**) |
 | HIST-SEC-003 | Auditoria administrativa | Rastreabilidade | Ações relevantes registradas (imutável) | HIST-AUTH-002; `HIPÓTESE` | Média |
+| HIST-SEC-004 | Código de acesso seguro | Proteção da conta da criança | `access_code_hash` (sem texto puro/logs/query string); rate limiting; rotação/revogação; sem códigos triviais | DEC-001 ✅ | Alta (futura — **não concluída**) |
+| HIST-SEC-005 | Gate de câmera/galeria por consentimento | Proteção do menor | Câmera/galeria/upload bloqueados até responsável autenticado + consentimento | HIST-AUTH-004, HIST-SEC-001 | Alta (futura — **não concluída**) |
 
 ## Épico 10 — Qualidade e observabilidade (`QA`)
 
@@ -100,6 +105,7 @@
 | HIST-QA-011 | Migração jsdom 30 | Ambiente de testes atualizado | Revisar breaking changes de DOM/CSSOM; alinhar a versão mínima de Node exigida pelo jsdom com `.nvmrc` e `engines`; revisar efeitos na Testing Library e Vitest; regressão completa. **jsdom 30 exige um piso específico dentro da linha Node 22** e não deve ser adotado enquanto o projeto declara suporte genérico a `>=22 <23` | HIST-QA-005; HIST-FUND-002 | Baixa (futura — **não concluída**) |
 | HIST-QA-012 | Migração Zod 4 | Validação atualizada | Revisar mudanças de API e inferência; revisar schemas de ambiente; revisar mensagens e estrutura de erros; adicionar testes de regressão para schemas; não migrar silenciosamente validações de segurança | HIST-FUND-002 | Baixa (futura — **não concluída**) |
 | HIST-QA-013 | Migração `@testing-library/jest-dom` 7 | Matchers atualizados | Adicionar e alinhar o peer obrigatório `@testing-library/dom`; revisar configuração de matchers; confirmar compatibilidade com Testing Library e Vitest; executar a suíte completa | HIST-QA-008; HIST-FUND-002 | Baixa (futura — **não concluída**) |
+| HIST-QA-014 | Resolver o pacote de decisões do MVP | Destravar o modelo físico e o início do jogador | ✅ CONCLUÍDA — orquestrador respondeu o formulário de [13](13-pacote-decisoes-mvp.md); decisões de produto registradas; itens jurídicos (DEC-002/018/010/017) **sinalizados como pendentes**; documentos atualizados | — | Alta |
 
 ## Épico 11 — Implantação (`DEPLOY`)
 

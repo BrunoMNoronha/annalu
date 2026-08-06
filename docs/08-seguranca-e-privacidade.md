@@ -19,10 +19,11 @@
 - Deve-se prever **consentimento** apropriado (provavelmente do responsável
   legal). A forma exata é `PENDENTE`.
 - O consentimento deve ser **específico, informado e revogável**.
-- Registrar estado e data do consentimento (ver `Guardian.consent_status` em
+- Registrar consentimento como histórico **append-only** (`ConsentRecord`); o
+  **estado vigente deriva dos registros**, não de um campo em `Guardian` (ver
   [modelo de dados](07-modelo-de-dados-inicial.md)).
-- Sem consentimento válido, funcionalidades que coletam dados de menores devem
-  ser bloqueadas (`HIPÓTESE`).
+- Sem consentimento válido, câmera/galeria/upload de menores ficam **bloqueados**
+  (gate de mídia — ver seção 12).
 
 ## 3. Minimização de dados
 
@@ -158,7 +159,34 @@ breaking changes — e **não** são mescladas automaticamente.
   **reexecutar** a auditoria (`pnpm audit`) e o smoke test de produção antes de
   aceitar a mudança.
 
-## 12. Revisão jurídica (registro)
+## 12. Decisões de segurança do MVP (6 ago 2026)
+
+> Derivadas do [pacote de decisões](13-pacote-decisoes-mvp.md). Não constituem
+> aconselhamento jurídico.
+
+- **Código de acesso da criança = credencial.** Armazenar somente **hash**
+  (`access_code_hash`), nunca em texto puro; **não** registrar em logs; **não**
+  transportar em query string; aplicar **rate limiting**; permitir **rotação e
+  revogação**; evitar códigos triviais.
+- **Autenticação de adultos** (direção de produto): responsável e administrador
+  autenticam por **e-mail (link/código) ou Google**; a criança **não** usa
+  e-mail/Google/senha; identidade externa é separada do perfil de domínio e não
+  substitui o UUID interno; nenhuma credencial de provedor é persistida
+  indevidamente.
+- **Consentimento append-only** (`ConsentRecord`): concessão/revogação
+  versionadas e auditáveis; estado vigente derivado do histórico (sem apagar
+  registros).
+- **Gate de mídia:** câmera, galeria e upload ficam **bloqueados até**
+  responsável autenticado e consentimento aplicável.
+- **Expurgo de upload órfão:** uploads não confirmados dentro da tolerância
+  (`upload_grace_seconds`, 60 s) têm o objeto removido.
+- **Retenção de fotografias:** ciclo técnico configurável (`retention_until`,
+  expurgo, auditoria sem imagem); **prazo `DEPENDE DE REVISÃO JURÍDICA`** — o
+  **lançamento com fotografias fica bloqueado** até essa revisão.
+- **Faixa etária (DEC-017) pendente:** enquanto isso, **não** coletar data de
+  nascimento nem idade, e **não** inferir idade por fotografia.
+
+## 13. Revisão jurídica (registro)
 
 > **PENDENTE:** validar com jurídico os requisitos de LGPD, base legal,
 > consentimento parental, retenção e direitos do titular **antes do

@@ -56,22 +56,49 @@
 
 ## 8. Testes de expiração de sessão
 
-- Rodada expira ao atingir o tempo limite (conforme regra definida).
-- Comportamento de respostas não enviadas ao expirar (a validar quando a regra
-  `RN-TMP-003` for decidida).
+- Rodada expira ao atingir o tempo limite (servidor é a autoridade do tempo).
+- **Apenas respostas completas** são enviadas automaticamente, **uma única vez**
+  (idempotência); texto sem foto vira histórico somente leitura.
+- Upload reservado antes do prazo e finalizado **dentro de 60 s**
+  (`upload_grace_seconds`) conta como completo; **fora** da tolerância, o objeto
+  órfão é removido e a resposta fica incompleta.
+- Sem retomada após a expiração (DEC-009).
 
-## 9. Testes do cálculo de pontuação
+## 9. Testes do cálculo de pontuação e avaliação por eventos
 
-- Apenas participações aprovadas geram pontos.
-- Rejeitadas geram zero.
-- Fórmula exata testável assim que definida (`RN-PON-003` `PENDENTE`).
-- Transações de pontos rastreáveis à avaliação de origem.
+- **Pontos fixos** (padrão 10, configurável); a rodada usa o **snapshot** do valor.
+- **Avaliação pendente sem evento:** dada uma `Evaluation` recém-criada e
+  pendente, quando ainda não ocorreu decisão administrativa, então ela possui
+  **zero `EvaluationEvent`** e **nenhuma** `ScoreTransaction`.
+- **Aprovação inicial** cria **um `EvaluationEvent`** e **uma** transação **+10**.
+- **Idempotência por evento:** o **mesmo `EvaluationEvent`** não gera segunda
+  transação (`evaluation_event_id`).
+- **Revisão** aprovada→rejeitada cria **novo evento** e transação **−10**;
+  **nova aprovação** cria outro evento e **+10**.
+- **Rejeição inicial não cria transação.**
+- Eventos anteriores **nunca** são apagados; transações **nunca** são alteradas;
+  o total = **soma** (positivas + negativas).
+- **Um evento nunca produz dois efeitos**; **eventos distintos** da mesma
+  avaliação podem produzir efeitos distintos.
 
 ## 10. Testes do ranking
 
-- Ordenação por pontuação decrescente.
-- Considera apenas pontuação validada.
-- Critério de desempate (a testar quando definido — `RN-RNK-003` `PENDENTE`).
+- Ordenação por total validado, decrescente; considera apenas pontuação validada.
+- **Ranking denso:** empatados **compartilham a mesma posição**.
+- Ordenação técnica por **UUID** garante paginação determinística **sem** alterar
+  a posição competitiva; **sem** uso de horário de avaliação/tempo/rejeições
+  (DEC-004).
+
+## 11.a. Testes de identificação e código de acesso
+
+- Apelidos iguais coexistem (UUID distinto; identificador público curto).
+- Código de acesso: **hash** (nunca texto puro), **rate limiting** em tentativas
+  inválidas, ausência em logs/query string.
+
+## 11.b. Testes de consentimento e gate de mídia
+
+- Câmera/galeria/upload **bloqueados** sem responsável autenticado + consentimento.
+- Revogação bloqueia novos uploads e preserva o histórico append-only.
 
 ## 11. Testes em navegadores móveis
 

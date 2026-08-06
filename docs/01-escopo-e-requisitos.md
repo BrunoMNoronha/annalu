@@ -20,7 +20,7 @@
 | RF-JOG-006 | O jogador vê um temporizador com o tempo limite da rodada. | CONFIRMADO |
 | RF-JOG-007 | O jogador consulta o ranking. | CONFIRMADO |
 | RF-JOG-008 | O jogador vê o resultado (aprovado/rejeitado) de suas participações. | HIPÓTESE |
-| RF-JOG-009 | O jogador pode pular uma charada. | HIPÓTESE (ver [decisões pendentes](12-decisoes-pendentes.md)) |
+| RF-JOG-009 | O jogador pode **pular** uma charada não enviada (estado `pulado`, zero ponto, sem troca). | CONFIRMADO (DEC-008) |
 | RF-JOG-010 | O jogador vê uma pré-visualização da imagem antes de enviar. | CONFIRMADO |
 
 ## 2. Requisitos funcionais — Painel administrativo (`RF-ADM`)
@@ -36,7 +36,7 @@
 | RF-ADM-007 | O administrador registra um motivo ao rejeitar. | HIPÓTESE |
 | RF-ADM-008 | O administrador autentica-se antes de acessar o painel. | CONFIRMADO |
 | RF-ADM-009 | Ações administrativas são registradas em log de auditoria. | HIPÓTESE |
-| RF-ADM-010 | O administrador pode cadastrar múltiplas charadas por palavra. | HIPÓTESE |
+| RF-ADM-010 | O administrador pode cadastrar **múltiplas charadas por palavra** (relação 1:N). | CONFIRMADO (DEC-006) |
 
 ## 3. Requisitos funcionais — Configuração do jogo (`RF-CFG`)
 
@@ -45,7 +45,7 @@
 | RF-CFG-001 | O administrador configura a quantidade de desafios por rodada. | CONFIRMADO |
 | RF-CFG-002 | O administrador configura o tempo limite da sessão. | CONFIRMADO |
 | RF-CFG-003 | A seleção de desafios é aleatória com base na configuração vigente. | CONFIRMADO |
-| RF-CFG-004 | O administrador define regras de pontuação. | HIPÓTESE |
+| RF-CFG-004 | A pontuação é **fixa por aprovação** (padrão 10, **configurável**; snapshot na rodada). O valor de tolerância de upload (`upload_grace_seconds`, 60 s) também é configurável e copiado na rodada. | CONFIRMADO (DEC-003/DEC-009) |
 | RF-CFG-005 | A configuração é versionada, de modo que rodadas guardem a configuração usada. | HIPÓTESE |
 
 ## 4. Requisitos funcionais — Ranking (`RF-RNK`)
@@ -54,7 +54,7 @@
 | ------ | --------- | ------ |
 | RF-RNK-001 | O ranking reflete apenas pontuação de participações **aprovadas**. | CONFIRMADO |
 | RF-RNK-002 | O ranking é exibido de forma ordenada (maior pontuação primeiro). | CONFIRMADO |
-| RF-RNK-003 | O ranking aplica critério de desempate definido. | HIPÓTESE (critério `PENDENTE`) |
+| RF-RNK-003 | O ranking é **denso**: empatados **compartilham a mesma posição**; a ordenação técnica por UUID não altera a posição exibida. | CONFIRMADO (DEC-004) |
 | RF-RNK-004 | O ranking pode ser filtrado por período. | HIPÓTESE |
 
 ## 5. Requisitos funcionais — Imagens (`RF-IMG`)
