@@ -5,6 +5,13 @@
 > `Alta`/`Média`/`Baixa`. Histórias dependentes de decisões pendentes referenciam
 > [decisões pendentes](12-decisoes-pendentes.md).
 > Código: `HIST-<EPICO>-NNN`.
+>
+> **Próximo passo recomendado (após HIST-FUND-004, já integrado):** camada de
+> **domínio/serviço + repositórios** sobre o modelo físico, começando pelo
+> **acervo de conteúdo** (HIST-CONT-001/002/003: `Word`/`Riddle`/`AcceptedAnswer`,
+> ativar/desativar, respostas normalizadas 1:N) e pela **leitura da configuração
+> vigente** (base de HIST-CFG e HIST-ROUND-001). Fatia sem endpoints/UI/auth e
+> **sem acoplamento jurídico** (sem fotografias/PII), totalmente testável.
 
 ## Épico 1 — Fundação técnica (`FUND`)
 
@@ -13,7 +20,7 @@
 | HIST-FUND-001 | Escolher e registrar arquitetura via ADR | Base para todo o desenvolvimento | ✅ CONCLUÍDA — [ADR 0001](adr/0001-arquitetura-web-integrada.md) (Aceita); stack definida | [Opções de arquitetura](06-opcoes-de-arquitetura.md) | Alta | M |
 | HIST-FUND-002 | Inicializar projeto TypeScript, lint, format e CI mínima | Qualidade desde o início | Projeto compila; lint/format rodam; CI executa checks | HIST-FUND-001 | Alta | M |
 | HIST-FUND-003 | Definir ambientes dev/teste/produção separados | Segurança e isolamento | Configuração por ambiente; segredos fora do versionamento | HIST-FUND-001 | Alta | M |
-| HIST-FUND-004 | Modelo físico Prisma do MVP | Persistência do domínio | 🔎 **EM REVISÃO** — schema (17 models), migration inicial, constraints/índices, seed fictício idempotente, testes de contrato + integração PostgreSQL, CI com banco descartável; ADR [0002](adr/0002-modelo-fisico-prisma-mvp.md) (`Proposta`). Ver [docs/14](14-modelo-fisico-prisma.md) | HIST-QA-014; DEC-001/003/004/005/006/008/009 ✅ | Alta | G |
+| HIST-FUND-004 | Modelo físico Prisma do MVP | Persistência do domínio | ✅ **CONCLUÍDA** — integrado via **PR #16** (merge `e180324`; CI pós-merge verde, run `31165703366`): schema (17 models), migration inicial com checks e índices únicos parciais (configuração atual; raiz única de avaliação; um provedor por perfil), seed fictício idempotente **com guard de banco de teste**, testes de contrato + integração PostgreSQL das invariantes garantidas pelo banco, CI com banco descartável; ADR [0002](adr/0002-modelo-fisico-prisma-mvp.md) (`Aceita`). Ver [docs/14](14-modelo-fisico-prisma.md) | HIST-QA-014; DEC-001/003/004/005/006/008/009 ✅ | Alta | G |
 
 ## Épico 2 — Autenticação e autorização (`AUTH`)
 
