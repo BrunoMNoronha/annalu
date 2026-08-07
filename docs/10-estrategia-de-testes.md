@@ -31,6 +31,18 @@
   avaliação** — índice único parcial `WHERE previous_event_id IS NULL`, etc.) e a
   idempotência do seed. Config separada em `vitest.integration.config.ts` (não
   roda em `pnpm test:run`).
+- **Conteúdo (aplicação/domínio + adapters Prisma):**
+  [`tests/integration/prisma/content.test.ts`](../tests/integration/prisma/content.test.ts)
+  valida palavras/charadas/respostas aceitas via os adapters reais — criação,
+  1:N, unicidade `(riddle_id, normalized_text)`, ativar/desativar excluindo do
+  acervo elegível, `getCurrentConfiguration` (atual/`null`) e erros de pai
+  inexistente. Testes unitários da camada em `src/modules/content/**` (funções
+  puras e serviços com fakes de repositório).
+- **Normalização de resposta (`normalizeAnswerText`) — HIPÓTESE provisória:**
+  `trim` → colapso de whitespace interno → lowercase; **não** remove acentos,
+  não translitera, não altera pontuação nem o texto original. Política técnica
+  reversível até a decisão definitiva de **RN-RES-002/003** — não é regra de
+  produto confirmada.
 - **Guard de segurança:** o helper só executa `TRUNCATE`/reset quando o nome do
   banco contém `_test`/`test`/`integration`. **Nunca** `migrate reset`/
   `db push --force-reset`/`DROP DATABASE` sem essa verificação.

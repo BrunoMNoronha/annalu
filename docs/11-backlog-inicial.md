@@ -6,12 +6,14 @@
 > [decisões pendentes](12-decisoes-pendentes.md).
 > Código: `HIST-<EPICO>-NNN`.
 >
-> **Próximo passo recomendado (após HIST-FUND-004, já integrado):** camada de
-> **domínio/serviço + repositórios** sobre o modelo físico, começando pelo
-> **acervo de conteúdo** (HIST-CONT-001/002/003: `Word`/`Riddle`/`AcceptedAnswer`,
-> ativar/desativar, respostas normalizadas 1:N) e pela **leitura da configuração
-> vigente** (base de HIST-CFG e HIST-ROUND-001). Fatia sem endpoints/UI/auth e
-> **sem acoplamento jurídico** (sem fotografias/PII), totalmente testável.
+> **Camada de conteúdo (domínio/serviço + adapters Prisma) — entregue** (sem
+> endpoints/UI/auth): acervo `Word`/`Riddle`/`AcceptedAnswer` (criar,
+> ativar/desativar, respostas 1:N com normalização — HIPÓTESE) e **leitura da
+> configuração vigente**. Ver `src/modules/content` e
+> `src/infrastructure/prisma/content`. **Próximo passo:** criação de rodada
+> (HIST-ROUND-001, usa o acervo ativo + config vigente) e, adiante, os endpoints
+> administrativos com RBAC (HIST-AUTH-002 → CONT/CFG). Fatia atual **sem
+> acoplamento jurídico** (sem fotografias/PII).
 
 ## Épico 1 — Fundação técnica (`FUND`)
 
@@ -35,10 +37,10 @@
 
 | Código | Descrição | Valor | Critérios de aceitação | Dependências | Prioridade |
 | ------ | --------- | ----- | ---------------------- | ------------ | ---------- |
-| HIST-CONT-001 | CRUD de palavras | Acervo de conteúdo | Criar/editar/desativar palavra | HIST-AUTH-002 | Alta |
-| HIST-CONT-002 | CRUD de charadas por palavra | Conteúdo jogável | Charada vinculada a palavra; enunciado | HIST-CONT-001 | Alta |
-| HIST-CONT-003 | Respostas aceitas por charada | Base para avaliação | Uma ou mais respostas aceitas (relação **1:N**) | HIST-CONT-002; DEC-005 ✅ | Alta |
-| HIST-CONT-004 | Ativar/desativar conteúdo | Curadoria | Só ativos entram no sorteio | HIST-CONT-002 | Média |
+| HIST-CONT-001 | CRUD de palavras | Acervo de conteúdo | 🔎 PARCIAL — camada de aplicação/domínio + adapter Prisma (criar/ativar/desativar); **sem endpoint/UI/RBAC**. Ver `src/modules/content` | HIST-AUTH-002 | Alta |
+| HIST-CONT-002 | CRUD de charadas por palavra | Conteúdo jogável | 🔎 PARCIAL — serviço/adapter (criar charada vinculada; ativar/desativar); **sem endpoint/UI/RBAC** | HIST-CONT-001 | Alta |
+| HIST-CONT-003 | Respostas aceitas por charada | Base para avaliação | 🔎 PARCIAL — serviço/adapter (adicionar/listar; **1:N**; unicidade por `normalizedText` — normalização é **HIPÓTESE**, ver docs/10); **sem endpoint/UI** | HIST-CONT-002; DEC-005 ✅ | Alta |
+| HIST-CONT-004 | Ativar/desativar conteúdo | Curadoria | 🔎 PARCIAL — status ACTIVE/INACTIVE via serviço; `listActiveContent` exclui inativos; **sem endpoint/UI** | HIST-CONT-002 | Média |
 
 ## Épico 4 — Configuração do jogo (`CFG`)
 
