@@ -67,9 +67,11 @@ PII da criança, sem tokens, sem URL pública, sem prazo de retenção).
   caso de uso for mal implementado (mitigado por testes futuros dos serviços).
 - Baseline PostgreSQL do CI pode divergir do provedor de produção (DEC-014).
 
-## Limitações
+## Validação
 
-- Migration/integração validadas apenas no CI (sem Docker local nesta execução).
+- Migration/integração validadas **localmente** (Node 22 + PostgreSQL 16
+  descartável) e pelo **workflow oficial de CI** no commit `5e84b0c`
+  (run `31130236774`), com todos os gates concluídos com sucesso.
 
 ## Itens jurídicos
 

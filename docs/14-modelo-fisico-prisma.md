@@ -139,10 +139,11 @@ default de 30 dias**), `deletionState`, `deletedAt`, `deletionReason`,
 `prisma migrate diff --from-empty --to-schema-datamodel --script` e **aumentado
 manualmente** com os checks, os índices únicos parciais (configuração atual e
 **raiz única de avaliação**) e o check "exatamente um proprietário".
-**Configurada para ser aplicada no CI** via `prisma migrate deploy` em PostgreSQL
-descartável; **validada localmente** contra `postgres:16` descartável (aplica em
-banco vazio; `migrate status` "up to date"). A **validação autoritativa do CI
-permanece pendente** enquanto o workflow não executa os passos.
+Aplicada no CI via `prisma migrate deploy` em PostgreSQL descartável; **validada
+localmente** contra `postgres:16` descartável (aplica em banco vazio;
+`migrate status` "up to date") e, em seguida, **validada pelo workflow oficial de
+CI no commit `5e84b0c`** (run `31130236774`), com o passo `migrate deploy`
+concluído com sucesso.
 
 ## Seed
 
@@ -190,9 +191,10 @@ revisão jurídica. O schema oferece suporte técnico, sem afirmar validade lega
 ## Limitações
 
 - Migration, seed (2×) e testes de integração **foram executados localmente**
-  contra `postgres:16` **descartável** e aprovados; a **validação autoritativa do
-  CI permanece pendente** enquanto o workflow não executa os passos. Validação
-  local **não** equivale ao CI.
+  contra `postgres:16` **descartável** e, posteriormente, **validados pelo
+  workflow oficial de CI no commit `5e84b0c`** (run `31130236774`), com todos os
+  gates concluídos com sucesso. A validação local isolada, por si só, **não**
+  equivale ao CI.
 - O PostgreSQL do CI (imagem `postgres:16`) é **baseline de CI**, não decisão de
   provedor de produção.
 - Invariantes que dependem de serviço (acima) **não** são garantidas pelo banco
