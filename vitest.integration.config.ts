@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 /**
@@ -8,6 +9,11 @@ import { defineConfig } from 'vitest/config';
  * `TEST_DATABASE_URL` (ou `DATABASE_URL`) apontando para um banco descartável.
  */
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
   test: {
     globals: true,
     environment: 'node',
