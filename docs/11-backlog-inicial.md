@@ -10,10 +10,22 @@
 > endpoints/UI/auth): acervo `Word`/`Riddle`/`AcceptedAnswer` (criar,
 > ativar/desativar, respostas 1:N com normalização — HIPÓTESE) e **leitura da
 > configuração vigente**. Ver `src/modules/content` e
-> `src/infrastructure/prisma/content`. **Próximo passo:** criação de rodada
-> (HIST-ROUND-001, usa o acervo ativo + config vigente) e, adiante, os endpoints
-> administrativos com RBAC (HIST-AUTH-002 → CONT/CFG). Fatia atual **sem
-> acoplamento jurídico** (sem fotografias/PII).
+> `src/infrastructure/prisma/content`. Fatia **sem acoplamento jurídico** (sem
+> fotografias/PII).
+>
+> **Camada de rodada (domínio/serviço + adapter Prisma) — PARCIAL**
+> (HIST-ROUND-001; sem endpoints/UI/timer em runtime): **criação** (`createRound`)
+> lê a configuração vigente, coleta o acervo **elegível** (charada ativa com ao
+> menos uma resposta aceita), **sorteia** a quantidade configurada (sem reposição,
+> aleatoriedade injetável) e persiste `GameSession` + `SessionChallenge` de forma
+> **atômica** com os snapshots obrigatórios; **início** (`startRound`) faz a
+> transição `CREATED → IN_PROGRESS`, grava `startedAt` pelo relógio do **servidor**
+> e calcula `expiresAt`. Ver `src/modules/round` e
+> `src/infrastructure/prisma/round`. **Hipóteses provisórias:** acervo insuficiente
+> → erro `InsufficientActiveContentError` (RN-SEL-003 permanece PENDENTE); seleção
+> sem reposição (RN-SEL-002 permanece HIPÓTESE). **Próximo passo:** temporizador/
+> expiração em runtime (HIST-ROUND-003) e, adiante, os endpoints administrativos
+> com RBAC (HIST-AUTH-002 → CONT/CFG/ROUND).
 
 ## Épico 1 — Fundação técnica (`FUND`)
 
@@ -54,7 +66,7 @@
 
 | Código | Descrição | Valor | Critérios de aceitação | Dependências | Prioridade |
 | ------ | --------- | ----- | ---------------------- | ------------ | ---------- |
-| HIST-ROUND-001 | Iniciar rodada com sorteio | Núcleo do jogo | Desafios aleatórios conforme config | HIST-CFG-001, HIST-CONT-003 | Alta |
+| HIST-ROUND-001 | Iniciar rodada com sorteio | Núcleo do jogo | 🔎 PARCIAL — camada de aplicação/domínio + adapter Prisma: `createRound` (config vigente + acervo elegível + sorteio sem reposição + snapshots + persistência atômica de `GameSession`/`SessionChallenge`) e `startRound` (`CREATED → IN_PROGRESS`, `startedAt`/`expiresAt` pelo servidor). **Sem endpoint/UI/timer em runtime.** Acervo insuficiente → erro (RN-SEL-003 PENDENTE); sem reposição (RN-SEL-002 HIPÓTESE). Ver `src/modules/round` | HIST-CFG-001, HIST-CONT-003 | Alta |
 | HIST-ROUND-002 | Exibir charada e capturar resposta | Núcleo do jogo | Charada exibida; resposta digitada | HIST-ROUND-001 | Alta |
 | HIST-ROUND-003 | Temporizador da sessão | Regra de tempo | Tempo exibido; expiração conforme regra | HIST-CFG-002; comportamento ao expirar `PENDENTE` | Alta |
 | HIST-ROUND-004 | Encerrar/finalizar rodada | Conclusão do fluxo | Rodada encerra e confirma envio | HIST-ROUND-002 | Alta |

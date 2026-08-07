@@ -43,6 +43,30 @@
   não translitera, não altera pontuação nem o texto original. Política técnica
   reversível até a decisão definitiva de **RN-RES-002/003** — não é regra de
   produto confirmada.
+- **Rodada (`GameSession`) — aplicação/domínio + adapter Prisma:** testes
+  unitários em `src/modules/round/**` cobrem a seleção pura de desafios
+  (elegibilidade = charada ativa com ≥1 resposta aceita; **determinística** com
+  fonte de aleatoriedade controlada — sem `Math.random()` na regra; **sem
+  reposição** ⇒ sem repetição; posições 1..N; pool igual/maior que o requerido),
+  os snapshots copiados exatamente, os erros (sem configuração vigente, acervo
+  insuficiente), a transição `CREATED → IN_PROGRESS`, `startedAt` via `Clock` e
+  `expiresAt = startedAt + timeLimitSecondsSnapshot`. Um teste de arquitetura
+  garante que a camada **não importa `PrismaClient`**. A integração real em
+  [`tests/integration/prisma/round.test.ts`](../tests/integration/prisma/round.test.ts)
+  valida criação atômica de `GameSession`/`SessionChallenge`, FKs de `Player`/
+  configuração, snapshots persistidos, posições e `riddleId` únicos na sessão,
+  apenas conteúdo elegível, `startedAt`/`expiresAt` persistidos, erros de acervo
+  insuficiente / sem configuração / jogador inexistente e **rollback** da
+  transação diante de falha na criação de um desafio (nenhuma rodada parcial).
+- **Fontes de aleatoriedade:** a regra usa a abstração `RandomSource` (injeção);
+  testes usam `sequenceRandom` (sequência fixa). **Evitar** testes frágeis
+  baseados em distribuição estatística de `Math.random()`.
+- **Seleção sem reposição (RN-SEL-002 — HIPÓTESE) / acervo insuficiente
+  (RN-SEL-003 — PENDENTE):** a implementação atual da rodada seleciona **sem
+  reposição** (consistente com a unicidade física `(sessionId, riddleId)`) e
+  **falha antes de persistir** quando há menos charadas elegíveis do que
+  `challengesPerRound` (`InsufficientActiveContentError`). Ambos são **provisórios
+  e reversíveis** — não promovem RN-SEL-002/003 a CONFIRMADO.
 - **Guard de segurança:** o helper só executa `TRUNCATE`/reset quando o nome do
   banco contém `_test`/`test`/`integration`. **Nunca** `migrate reset`/
   `db push --force-reset`/`DROP DATABASE` sem essa verificação.
