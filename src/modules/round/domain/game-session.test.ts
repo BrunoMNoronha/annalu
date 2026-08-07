@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   assertCanStart,
   computeExpiresAt,
+  isExpiredAt,
   type GameSessionStatus,
 } from '@/modules/round/domain/game-session';
 import { InvalidGameSessionStateTransitionError } from '@/modules/round/domain/errors';
@@ -38,5 +39,25 @@ describe('computeExpiresAt', () => {
     const startedAt = new Date('2026-08-07T12:00:00.000Z');
     computeExpiresAt(startedAt, 120);
     expect(startedAt.toISOString()).toBe('2026-08-07T12:00:00.000Z');
+  });
+});
+
+describe('isExpiredAt', () => {
+  const expiresAt = new Date('2026-08-07T12:10:00.000Z');
+
+  it('não está vencida antes do prazo (now < expiresAt)', () => {
+    expect(isExpiredAt(expiresAt, new Date(expiresAt.getTime() - 1))).toBe(
+      false,
+    );
+  });
+
+  it('está vencida exatamente no prazo (now == expiresAt, boundary inclusivo)', () => {
+    expect(isExpiredAt(expiresAt, new Date(expiresAt.getTime()))).toBe(true);
+  });
+
+  it('está vencida após o prazo (now > expiresAt)', () => {
+    expect(isExpiredAt(expiresAt, new Date(expiresAt.getTime() + 1))).toBe(
+      true,
+    );
   });
 });
