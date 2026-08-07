@@ -1,5 +1,8 @@
 import type { GameSessionRepository } from '@/modules/round/application/ports';
-import { GameSessionNotFoundError } from '@/modules/round/domain/errors';
+import {
+  GameSessionNotFoundError,
+  InvalidGameSessionStateTransitionError,
+} from '@/modules/round/domain/errors';
 import {
   assertCanStart,
   computeExpiresAt,
@@ -16,12 +19,16 @@ export interface StartRoundDependencies {
 /**
  * Inicia uma rodada existente:
  *
- * 1. carrega a rodada (erro se não existir);
- * 2. valida a transição de estado `CREATED → IN_PROGRESS` (docs/04);
- * 3. registra `startedAt` pelo **relógio do servidor** (`Clock`);
- * 4. calcula `expiresAt = startedAt + timeLimitSecondsSnapshot` no servidor
- *    (RN-TMP-002 — nunca a partir do relógio do cliente);
- * 5. persiste o novo estado.
+ * 1. carrega a rodada (erro se não existir) e valida a transição para uma
+ *    mensagem de erro clara no caminho comum;
+ * 2. registra `startedAt` pelo **relógio do servidor** (`Clock`) e calcula
+ *    `expiresAt = startedAt + timeLimitSecondsSnapshot` no servidor (RN-TMP-002);
+ * 3. aplica a transição via **compare-and-set atômico** `CREATED → IN_PROGRESS`.
+ *
+ * A garantia final contra concorrência é o compare-and-set (não o
+ * `findById → validar → update`): em duas chamadas concorrentes, **exatamente
+ * uma** vence; a perdedora **não** sobrescreve `startedAt`/`expiresAt` e recebe
+ * `InvalidGameSessionStateTransitionError`.
  */
 export async function startRound(
   deps: StartRoundDependencies,
@@ -31,7 +38,6 @@ export async function startRound(
   if (!session) {
     throw new GameSessionNotFoundError(input.sessionId);
   }
-
   assertCanStart(session.status);
 
   const startedAt = deps.clock.now();
@@ -40,5 +46,19 @@ export async function startRound(
     session.timeLimitSecondsSnapshot,
   );
 
-  return deps.sessions.start({ sessionId: session.id, startedAt, expiresAt });
+  const started = await deps.sessions.startIfCreated({
+    sessionId: session.id,
+    startedAt,
+    expiresAt,
+  });
+  if (started) {
+    return started;
+  }
+
+  // Perdeu a corrida: outra chamada iniciou entre o findById e o compare-and-set.
+  const current = await deps.sessions.findById(input.sessionId);
+  throw new InvalidGameSessionStateTransitionError(
+    current?.status ?? 'UNKNOWN',
+    'IN_PROGRESS',
+  );
 }

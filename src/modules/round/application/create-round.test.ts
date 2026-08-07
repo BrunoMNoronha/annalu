@@ -8,6 +8,7 @@ import type {
 import { createRound } from '@/modules/round/application/create-round';
 import type {
   CreateGameSessionInput,
+  ExpireGameSessionInput,
   GameSessionRepository,
   StartGameSessionInput,
 } from '@/modules/round/application/ports';
@@ -96,6 +97,7 @@ class FakeSessionRepository implements GameSessionRepository {
       timeLimitSecondsSnapshot: input.timeLimitSecondsSnapshot,
       startedAt: null,
       expiresAt: null,
+      endedAt: null,
       challenges: input.challenges.map((c, i) => ({
         id: `challenge-${i}`,
         riddleId: c.riddleId,
@@ -107,8 +109,11 @@ class FakeSessionRepository implements GameSessionRepository {
   findById(): Promise<GameSession | null> {
     return Promise.resolve(null);
   }
-  start(input: StartGameSessionInput): Promise<GameSession> {
-    throw new Error(`unexpected start(${input.sessionId})`);
+  startIfCreated(input: StartGameSessionInput): Promise<GameSession | null> {
+    throw new Error(`unexpected startIfCreated(${input.sessionId})`);
+  }
+  expireIfDue(input: ExpireGameSessionInput): Promise<GameSession | null> {
+    throw new Error(`unexpected expireIfDue(${input.sessionId})`);
   }
 }
 

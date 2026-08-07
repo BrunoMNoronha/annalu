@@ -58,15 +58,35 @@
   apenas conteúdo elegível, `startedAt`/`expiresAt` persistidos, erros de acervo
   insuficiente / sem configuração / jogador inexistente e **rollback** da
   transação diante de falha na criação de um desafio (nenhuma rodada parcial).
+- **Início e expiração concorrente-seguros (`compare-and-set`):** as transições
+  `CREATED → IN_PROGRESS` (`startIfCreated`) e `IN_PROGRESS → EXPIRED`
+  (`expireIfDue`) são **atômicas no banco** — a condição de estado integra a
+  cláusula `WHERE` da escrita (não o padrão frágil `findById → validar →
+  update`). Cobertura em
+  [`tests/integration/prisma/game-session-lifecycle.test.ts`](../tests/integration/prisma/game-session-lifecycle.test.ts):
+  - **Concorrência do início:** duas chamadas simultâneas de `startRound` →
+    **exatamente uma** vence; a perdedora recebe erro de transição e **não
+    sobrescreve** `startedAt`/`expiresAt`.
+  - **Boundary temporal:** `now < expiresAt` **não** expira; `now == expiresAt`
+    (inclusivo) **expira**; `now > expiresAt` expira. O `Clock` do servidor é a
+    autoridade (RN-TMP-002); testes usam **relógio fake** (`fixedClock`), nunca o
+    relógio real.
+  - **`endedAt = expiresAt`** (nunca o relógio de detecção do vencimento).
+  - **Idempotência:** repetir `expireRoundIfDue` numa sessão já `EXPIRED` não
+    retransiciona nem altera `endedAt`/`expiresAt`; concorrência de expiração →
+    estado final consistente.
+  - **Estados incompatíveis:** `CREATED`/`COMPLETED`/`CANCELLED` **não** expiram
+    (estados terminais não são reabertos).
 - **Fontes de aleatoriedade:** a regra usa a abstração `RandomSource` (injeção);
   testes usam `sequenceRandom` (sequência fixa). **Evitar** testes frágeis
   baseados em distribuição estatística de `Math.random()`.
 - **Seleção sem reposição (RN-SEL-002 — HIPÓTESE) / acervo insuficiente
-  (RN-SEL-003 — PENDENTE):** a implementação atual da rodada seleciona **sem
-  reposição** (consistente com a unicidade física `(sessionId, riddleId)`) e
-  **falha antes de persistir** quando há menos charadas elegíveis do que
-  `challengesPerRound` (`InsufficientActiveContentError`). Ambos são **provisórios
-  e reversíveis** — não promovem RN-SEL-002/003 a CONFIRMADO.
+  (RN-SEL-003 — CONFIRMADO):** a rodada seleciona **sem reposição** (consistente
+  com a unicidade física `(sessionId, riddleId)`) — RN-SEL-002 permanece
+  **HIPÓTESE**, atendida como consequência técnica. Por **RN-SEL-003
+  (CONFIRMADO)**, quando há menos charadas elegíveis do que `challengesPerRound`
+  a criação **falha antes de persistir** (`InsufficientActiveContentError`), sem
+  rodada parcial.
 - **Guard de segurança:** o helper só executa `TRUNCATE`/reset quando o nome do
   banco contém `_test`/`test`/`integration`. **Nunca** `migrate reset`/
   `db push --force-reset`/`DROP DATABASE` sem essa verificação.

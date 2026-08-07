@@ -84,7 +84,10 @@ arquivo inválido → mensagem amigável e nova tentativa.
 4. As participações entram na fila de avaliação com status *pendente*.
 
 **Desvios:** falha de upload → repetição/reenvio com feedback de progresso;
-expiração antes do fim (`PENDENTE`).
+expiração antes do fim (**CONFIRMADO** — DEC-009 / RN-TMP / RN-EXP: o servidor é
+a autoridade do tempo e preserva o que já foi salvo; a transição temporal
+`IN_PROGRESS → EXPIRED` já é aplicada no backend, com os efeitos sobre respostas/
+imagens em módulos futuros).
 
 ### J5 — Avaliar uma participação
 

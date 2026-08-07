@@ -1,13 +1,14 @@
 import { Prisma, type PrismaClient } from '@prisma/client';
 import type {
   CreateGameSessionInput,
+  ExpireGameSessionInput,
   GameSession,
   GameSessionRepository,
   GameSessionStatus,
   SessionChallengeState,
   StartGameSessionInput,
 } from '@/modules/round';
-import { GameSessionNotFoundError, PlayerNotFoundError } from '@/modules/round';
+import { PlayerNotFoundError } from '@/modules/round';
 
 interface SessionChallengeRow {
   id: string;
@@ -27,6 +28,7 @@ interface GameSessionRow {
   timeLimitSecondsSnapshot: number;
   startedAt: Date | null;
   expiresAt: Date | null;
+  endedAt: Date | null;
   sessionChallenges: SessionChallengeRow[];
 }
 
@@ -42,6 +44,7 @@ function toSession(row: GameSessionRow): GameSession {
     timeLimitSecondsSnapshot: row.timeLimitSecondsSnapshot,
     startedAt: row.startedAt,
     expiresAt: row.expiresAt,
+    endedAt: row.endedAt,
     challenges: row.sessionChallenges.map((challenge) => ({
       id: challenge.id,
       riddleId: challenge.riddleId,
@@ -65,9 +68,11 @@ function referencesPlayer(
 
 /**
  * Adapter Prisma do `GameSessionRepository`. A criação usa **escrita aninhada**
- * (`gameSession.create` com `sessionChallenges.create`), que o Prisma executa em
- * uma **única transação** — atomicidade tudo-ou-nada. Traduz violações do banco
- * para erros de domínio; nunca vaza mensagem/código do Prisma.
+ * (`gameSession.create` com `sessionChallenges.create`), executada em uma única
+ * transação (atomicidade tudo-ou-nada). As transições de estado são
+ * **compare-and-set atômicos** (`startIfCreated`/`expireIfDue`): a condição de
+ * estado integra a cláusula `WHERE` da escrita, sem TOCTOU. Traduz violações do
+ * banco para erros de domínio; nunca vaza mensagem/código do Prisma.
  */
 export class PrismaGameSessionRepository implements GameSessionRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -113,26 +118,44 @@ export class PrismaGameSessionRepository implements GameSessionRepository {
     return row ? toSession(row) : null;
   }
 
-  async start(input: StartGameSessionInput): Promise<GameSession> {
-    try {
-      const row = await this.prisma.gameSession.update({
-        where: { id: input.sessionId },
-        data: {
-          status: 'IN_PROGRESS',
-          startedAt: input.startedAt,
-          expiresAt: input.expiresAt,
-        },
-        include: { sessionChallenges: { orderBy: { position: 'asc' } } },
-      });
-      return toSession(row);
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2025'
-      ) {
-        throw new GameSessionNotFoundError(input.sessionId);
-      }
-      throw error;
+  async startIfCreated(
+    input: StartGameSessionInput,
+  ): Promise<GameSession | null> {
+    // Compare-and-set: só transiciona se ainda estiver CREATED. `updateMany`
+    // aplica a condição de estado na cláusula WHERE (atômico no banco).
+    const result = await this.prisma.gameSession.updateMany({
+      where: { id: input.sessionId, status: 'CREATED' },
+      data: {
+        status: 'IN_PROGRESS',
+        startedAt: input.startedAt,
+        expiresAt: input.expiresAt,
+      },
+    });
+    if (result.count === 0) {
+      return null;
     }
+    return this.findById(input.sessionId);
+  }
+
+  async expireIfDue(
+    input: ExpireGameSessionInput,
+  ): Promise<GameSession | null> {
+    // Compare-and-set atômico: transiciona IN_PROGRESS → EXPIRED apenas se
+    // vencida (`expires_at <= now`), gravando `ended_at = expires_at` no nível
+    // do banco (nunca o relógio de detecção). SQL cru porque `SET col = col`
+    // não é expressável pelo `updateMany` do Prisma.
+    const affected = await this.prisma.$executeRaw`
+      UPDATE "game_sessions"
+      SET "status" = 'EXPIRED'::"GameSessionStatus",
+          "ended_at" = "expires_at",
+          "updated_at" = now()
+      WHERE "id" = ${input.sessionId}::uuid
+        AND "status" = 'IN_PROGRESS'::"GameSessionStatus"
+        AND "expires_at" <= ${input.now}
+    `;
+    if (affected === 0) {
+      return null;
+    }
+    return this.findById(input.sessionId);
   }
 }
