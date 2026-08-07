@@ -14,6 +14,11 @@
  * apontando para um banco DESCARTÁVEL.
  */
 import { PrismaClient } from '@prisma/client';
+import { assertSeedDatabase } from './seed-guard.mjs';
+
+// Guard (AGENTS.md): recusa bancos que não sejam claramente de teste ANTES de
+// qualquer conexão/operação Prisma. Decide apenas pelo nome do database.
+assertSeedDatabase();
 
 const prisma = new PrismaClient();
 
