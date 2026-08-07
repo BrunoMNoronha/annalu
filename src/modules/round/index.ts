@@ -19,9 +19,15 @@ export {
 } from '@/modules/round/application/start-round';
 export {
   expireRoundIfDue,
+  expireRoundAt,
   type ExpireRoundDependencies,
   type ExpireRoundResult,
 } from '@/modules/round/application/expire-round';
+export {
+  getRoundState,
+  type RoundState,
+  type GetRoundStateDependencies,
+} from '@/modules/round/application/get-round-state';
 
 // Ports (para adapters e testes)
 export type {
@@ -30,6 +36,11 @@ export type {
   StartGameSessionInput,
   ExpireGameSessionInput,
 } from '@/modules/round/application/ports';
+export type {
+  RoundStateQueryRepository,
+  RoundStateProjection,
+  RoundStateChallengeView,
+} from '@/modules/round/application/round-state-ports';
 
 // Domínio — rodada
 export type {
@@ -41,6 +52,7 @@ export {
   assertCanStart,
   computeExpiresAt,
   isExpiredAt,
+  remainingMilliseconds,
 } from '@/modules/round/domain/game-session';
 export type { SessionChallengeState } from '@/modules/round/domain/session-challenge-state';
 

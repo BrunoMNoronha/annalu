@@ -74,3 +74,31 @@ export function computeExpiresAt(
 export function isExpiredAt(expiresAt: Date, now: Date): boolean {
   return now.getTime() >= expiresAt.getTime();
 }
+
+/**
+ * Tempo restante da rodada, em **milissegundos** (precisão temporal — sem
+ * arredondamento de apresentação, que pertence à futura UI). O `serverNow` é a
+ * autoridade temporal (nunca o cliente).
+ *
+ * - `IN_PROGRESS`: `max(0, expiresAt - serverNow)` (nunca negativo).
+ * - `EXPIRED`: `0`.
+ * - `CREATED`: `null` (o contador ainda não começou).
+ * - `COMPLETED`/`CANCELLED`: `null` (tempo restante não é mais relevante).
+ */
+export function remainingMilliseconds(
+  status: GameSessionStatus,
+  expiresAt: Date | null,
+  serverNow: Date,
+): number | null {
+  if (status === 'IN_PROGRESS') {
+    if (expiresAt === null) {
+      return null;
+    }
+    return Math.max(0, expiresAt.getTime() - serverNow.getTime());
+  }
+  if (status === 'EXPIRED') {
+    return 0;
+  }
+  // CREATED, COMPLETED, CANCELLED.
+  return null;
+}
