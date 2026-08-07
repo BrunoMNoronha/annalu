@@ -4,8 +4,9 @@ import type { SessionChallengeState } from '@/modules/round/domain/session-chall
 /**
  * Estado de uma rodada. Espelha o enum físico `GameSessionStatus` do Prisma sem
  * acoplar o domínio ao cliente gerado. Modelo de estados em docs/04:
- * `CREATED → IN_PROGRESS → (COMPLETED | EXPIRED | CANCELLED)`. Nesta fatia só
- * são implementadas a criação (`CREATED`) e o início (`→ IN_PROGRESS`).
+ * `CREATED → IN_PROGRESS → (COMPLETED | EXPIRED | CANCELLED)`. Esta fatia
+ * implementa a criação (`CREATED`), o início (`→ IN_PROGRESS`) e a **expiração
+ * temporal** (`IN_PROGRESS → EXPIRED`).
  */
 export type GameSessionStatus =
   'CREATED' | 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED' | 'CANCELLED';
@@ -36,6 +37,8 @@ export interface GameSession {
   readonly timeLimitSecondsSnapshot: number;
   readonly startedAt: Date | null;
   readonly expiresAt: Date | null;
+  /** Instante de encerramento. Na expiração, `endedAt = expiresAt` (RN-TMP-002). */
+  readonly endedAt: Date | null;
   readonly challenges: readonly SessionChallenge[];
 }
 
@@ -59,4 +62,15 @@ export function computeExpiresAt(
   timeLimitSeconds: number,
 ): Date {
   return new Date(startedAt.getTime() + timeLimitSeconds * 1000);
+}
+
+/**
+ * Predicado puro de vencimento: a rodada está **vencida** quando
+ * `now >= expiresAt` (boundary **inclusivo** — `now == expiresAt` já expira). O
+ * `Clock` do servidor é a autoridade temporal (RN-TMP-002). O adapter de
+ * infraestrutura codifica a **mesma** condição (`expires_at <= now`) na cláusula
+ * atômica de compare-and-set.
+ */
+export function isExpiredAt(expiresAt: Date, now: Date): boolean {
+  return now.getTime() >= expiresAt.getTime();
 }

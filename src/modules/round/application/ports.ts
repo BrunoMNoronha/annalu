@@ -7,6 +7,10 @@ import type { GameSession } from '@/modules/round/domain/game-session';
  * infraestrutura as implementam e traduzem violações do banco para erros de
  * domínio. A leitura de configuração vigente e do acervo ativo reutiliza os
  * ports do módulo `content` (não são duplicados aqui).
+ *
+ * As transições de estado são **compare-and-set atômicos** (`startIfCreated`,
+ * `expireIfDue`): a condição de estado faz parte da escrita, eliminando o TOCTOU
+ * de `findById → validar → update`.
  */
 
 export interface CreateGameSessionInput {
@@ -27,6 +31,12 @@ export interface StartGameSessionInput {
   readonly expiresAt: Date;
 }
 
+export interface ExpireGameSessionInput {
+  readonly sessionId: string;
+  /** Instante atual (relógio do servidor) comparado a `expiresAt`. */
+  readonly now: Date;
+}
+
 export interface GameSessionRepository {
   /**
    * Persiste a rodada e seus desafios de forma **atômica** (tudo ou nada).
@@ -38,8 +48,19 @@ export interface GameSessionRepository {
   findById(id: string): Promise<GameSession | null>;
 
   /**
-   * Marca a rodada como iniciada (`IN_PROGRESS`) gravando `startedAt`/
-   * `expiresAt`. Lança `GameSessionNotFoundError` se o id não existir.
+   * **Compare-and-set atômico** `CREATED → IN_PROGRESS`: aplica a transição e
+   * grava `startedAt`/`expiresAt` **somente se** o estado ainda for `CREATED`.
+   * Retorna a sessão atualizada quando venceu, ou `null` quando não estava em
+   * `CREATED` (não sobrescreve `startedAt`/`expiresAt` da vencedora).
    */
-  start(input: StartGameSessionInput): Promise<GameSession>;
+  startIfCreated(input: StartGameSessionInput): Promise<GameSession | null>;
+
+  /**
+   * **Compare-and-set atômico** `IN_PROGRESS → EXPIRED`: aplica a transição
+   * **somente se** o estado for `IN_PROGRESS` **e** `expires_at <= now`,
+   * gravando `endedAt = expiresAt` no nível do banco. Retorna a sessão
+   * atualizada quando venceu, ou `null` quando não venceu (não vencida ou já
+   * transicionada por concorrente). Idempotente.
+   */
+  expireIfDue(input: ExpireGameSessionInput): Promise<GameSession | null>;
 }

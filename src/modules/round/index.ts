@@ -17,12 +17,18 @@ export {
   startRound,
   type StartRoundDependencies,
 } from '@/modules/round/application/start-round';
+export {
+  expireRoundIfDue,
+  type ExpireRoundDependencies,
+  type ExpireRoundResult,
+} from '@/modules/round/application/expire-round';
 
 // Ports (para adapters e testes)
 export type {
   GameSessionRepository,
   CreateGameSessionInput,
   StartGameSessionInput,
+  ExpireGameSessionInput,
 } from '@/modules/round/application/ports';
 
 // Domínio — rodada
@@ -34,6 +40,7 @@ export type {
 export {
   assertCanStart,
   computeExpiresAt,
+  isExpiredAt,
 } from '@/modules/round/domain/game-session';
 export type { SessionChallengeState } from '@/modules/round/domain/session-challenge-state';
 
