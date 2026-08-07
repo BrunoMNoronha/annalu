@@ -36,7 +36,7 @@ Resposta: Copo.
 | Documentação de fundação  | Consolidada (commit próprio)                             |
 | Arquitetura               | **Decidida** — web integrada ([ADR 0001](docs/adr/0001-arquitetura-web-integrada.md)) |
 | Fundação técnica          | Inicializada (Next.js + TypeScript estrito + Prisma)     |
-| Modelo de dados físico    | Não iniciado (apenas conceitual; aguarda decisões)       |
+| Modelo de dados físico    | **Em revisão** — schema Prisma + migration inicial + seed + testes ([docs/14](docs/14-modelo-fisico-prisma.md), ADR [0002](docs/adr/0002-modelo-fisico-prisma-mvp.md) `Proposta`) |
 | Funcionalidades do jogo   | Não implementadas                                        |
 
 ## Stack (ADR 0001)
@@ -106,12 +106,16 @@ apenas estado e horário do servidor).
 | `pnpm smoke:production` | Smoke test de produção (otimização de imagem / `sharp`). |
 | `pnpm format:check` / `pnpm format:write` | Prettier (código e configuração). |
 | `pnpm docs:check-links` | Verifica links Markdown relativos. |
-| `pnpm prisma:validate` / `pnpm prisma:generate` | Valida/gera o Prisma. |
+| `pnpm prisma:format` / `pnpm prisma:validate` / `pnpm prisma:generate` | Formata/valida/gera o Prisma. |
+| `pnpm prisma:migrate:deploy` | Aplica migrations (requer PostgreSQL de teste). |
+| `pnpm prisma:seed` | Seed fictício idempotente (requer PostgreSQL de teste). |
+| `pnpm test:integration` | Testes de integração PostgreSQL (config separada). |
 | `pnpm validate` | Agrega format:check + lint + typecheck + testes + links. |
 
 > `pnpm prisma:validate` precisa de `DATABASE_URL` definida (use um valor de
-> `.env`); o CI fornece um valor fictício apenas para resolver o `env()` do
-> datasource.
+> `.env`). Migrations, seed e `test:integration` exigem um **PostgreSQL
+> descartável** (`DATABASE_URL`/`TEST_DATABASE_URL` — nome do banco deve conter
+> `_test`/`test`/`integration`). Ver [docs/14](docs/14-modelo-fisico-prisma.md).
 
 ## Windows e finais de linha
 
@@ -138,10 +142,11 @@ src/
   server/         Composição/serviços do lado servidor
   infrastructure/ Prisma e abstração de armazenamento (S3)
   shared/         Config (env), logger estruturado, relógio
-prisma/           schema.prisma (datasource + generator; sem modelo de domínio)
+prisma/           schema.prisma (17 models), migrations/ e seed.mjs (fictício)
+tests/integration Testes de integração PostgreSQL (guard de banco de teste)
 scripts/          check-links.mjs (verificação de documentação)
 docs/             Documentação do produto e ADRs
-.github/workflows CI (GitHub Actions)
+.github/workflows CI (GitHub Actions, com PostgreSQL descartável)
 ```
 
 ## Funcionalidades ainda NÃO implementadas
@@ -149,8 +154,9 @@ docs/             Documentação do produto e ADRs
 Identificação de criança · cadastro/consentimento de responsável · cadastro de
 palavras/charadas · configuração de rodada · seleção aleatória · fluxo da
 rodada · **upload real de imagens** · avaliação administrativa · autenticação ·
-pontuação · ranking · modelo físico de dados. Ver
-[backlog](docs/11-backlog-inicial.md) e
+pontuação · ranking. O **modelo físico de dados** existe como schema/migration/
+seed (em revisão via PR), mas **nenhum serviço/caso de uso** foi implementado.
+Ver [backlog](docs/11-backlog-inicial.md) e
 [decisões pendentes](docs/12-decisoes-pendentes.md).
 
 ## Documentação
@@ -172,7 +178,9 @@ Ordem sugerida de leitura em [`docs/`](docs/):
 | 10 | [Estratégia de testes](docs/10-estrategia-de-testes.md) |
 | 11 | [Backlog inicial](docs/11-backlog-inicial.md) |
 | 12 | [Decisões pendentes](docs/12-decisoes-pendentes.md) |
-|    | [ADR](docs/adr/README.md) · [ADR 0001](docs/adr/0001-arquitetura-web-integrada.md) |
+| 13 | [Pacote de decisões do MVP](docs/13-pacote-decisoes-mvp.md) |
+| 14 | [Modelo físico Prisma](docs/14-modelo-fisico-prisma.md) |
+|    | [ADR](docs/adr/README.md) · [0001](docs/adr/0001-arquitetura-web-integrada.md) · [0002](docs/adr/0002-modelo-fisico-prisma-mvp.md) |
 
 ## Como agentes devem iniciar uma tarefa
 

@@ -66,6 +66,11 @@ Em etapas futuras de código (quando autorizadas):
 - Rode linters, type-check e testes conforme definido em
   [`docs/10-estrategia-de-testes.md`](docs/10-estrategia-de-testes.md).
 - Não marque como concluída uma tarefa cujos testes falham; relate a falha.
+- **Banco de dados:** operações de migration/seed/integração só rodam contra um
+  **PostgreSQL descartável** (nome contendo `_test`/`test`/`integration`).
+  **Nunca** execute `migrate reset`, `db push --force-reset`, `DROP DATABASE` ou
+  `TRUNCATE` sem o guard de banco de teste. Não use banco de produção. Detalhes
+  em [`docs/14-modelo-fisico-prisma.md`](docs/14-modelo-fisico-prisma.md).
 
 ## 6. Restrições de Git
 

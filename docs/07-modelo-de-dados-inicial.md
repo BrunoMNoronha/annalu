@@ -6,6 +6,10 @@
 > [pacote](13-pacote-decisoes-mvp.md)); itens jurídicos (consentimento, retenção,
 > faixa etária) permanecem **parciais/pendentes**.
 
+> 🏗️ O **modelo físico Prisma** (schema, migration, constraints, seed e testes)
+> está em [14 — Modelo físico Prisma](14-modelo-fisico-prisma.md) e na ADR
+> [0002](adr/0002-modelo-fisico-prisma-mvp.md) (`Proposta`).
+
 ## Convenções
 
 - Identificadores: chave primária `id` **UUID** (direção de modelagem).

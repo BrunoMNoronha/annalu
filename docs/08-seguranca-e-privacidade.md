@@ -85,6 +85,14 @@
 
 - **Proibido** usar dados pessoais reais em testes, fixtures ou seeds.
 - Usar dados fictícios e imagens não identificáveis / sintéticas.
+- **Seed** ([`prisma/seed.mjs`](../prisma/seed.mjs)) é fictício e idempotente,
+  usa domínios reservados `example.test` e um `accessCodeHash` **fixture não
+  autenticável**; sem foto/rodada/avaliação/pontuação reais.
+- **Banco de teste descartável:** integração roda contra PostgreSQL descartável;
+  um **guard** só permite `TRUNCATE`/reset quando o nome do banco contém
+  `_test`/`test`/`integration` (ver [docs/14](14-modelo-fisico-prisma.md)).
+- O modelo físico **não** armazena PII da criança, tokens, URL pública de imagem
+  nem código de acesso em texto puro (ver ADR [0002](adr/0002-modelo-fisico-prisma-mvp.md)).
 
 ## 11. Boas práticas gerais
 

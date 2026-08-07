@@ -19,8 +19,12 @@
     "format:check": "prettier --check .",
     "format:write": "prettier --write .",
     "docs:check-links": "node scripts/check-links.mjs",
+    "prisma:format": "prisma format",
     "prisma:validate": "prisma validate",
     "prisma:generate": "prisma generate",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:seed": "node prisma/seed.mjs",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "smoke:production": "node scripts/smoke-production.mjs",
     "validate": "prettier --check . && next lint && tsc --noEmit && vitest run && node scripts/check-links.mjs"
   },
@@ -45,6 +49,9 @@
     "prisma": "^6.16.2",
     "typescript": "^5.9.2",
     "vitest": "^3.2.6"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
   },
   "pnpm": {
     "overrides": {
