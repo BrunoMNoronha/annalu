@@ -1,8 +1,9 @@
 # 0002 — Modelo físico Prisma do MVP
 
-- **Status:** Proposta
-- **Data:** 2026-08-06
-- **Decisores:** (pendente — aguarda revisão do orquestrador no PR)
+- **Status:** Aceita
+- **Data:** 2026-08-06 (proposta) · 2026-08-07 (aceita)
+- **Decisores:** orquestrador — integrado via **PR #16** (merge `e180324`); CI
+  pós-merge verde (run `31165703366`)
 - **Substitui:** —
 - **Substituída por:** —
 - **Relacionadas:** [ADR 0001](0001-arquitetura-web-integrada.md),
