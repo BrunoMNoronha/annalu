@@ -50,6 +50,16 @@
 | RN-SEL-002 | Dentro de uma mesma rodada, não se repetem charadas. | HIPÓTESE |
 | RN-SEL-003 | Se o acervo ativo for menor que a quantidade pedida, o comportamento é definido (erro ou rodada menor). | PENDENTE |
 
+> **Implementação provisória (fatia de rodada — `src/modules/round`):** o sorteio
+> considera **elegível** a charada ativa (de palavra ativa) com **ao menos uma
+> resposta aceita** (RN-CHA-003) e seleciona **sem reposição**, o que satisfaz
+> RN-SEL-002 como **consequência técnica** — a regra permanece **HIPÓTESE**, não
+> promovida a CONFIRMADO. Para **RN-SEL-003** (PENDENTE), adota-se apenas uma
+> **HIPÓTESE técnica reversível**: acervo elegível menor que `challengesPerRound`
+> faz a criação **falhar antes de persistir** (`InsufficientActiveContentError`),
+> sem rodada parcial. Isso **não** decide o produto (erro vs. rodada menor) — a
+> decisão definitiva de RN-SEL-003 segue em aberto.
+
 ## Tempo limite (`RN-TMP`)
 
 | Código | Regra | Status |

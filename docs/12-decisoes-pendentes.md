@@ -55,6 +55,15 @@
 > DEC-018) está registrado como HIST-SEC-006 no [backlog](11-backlog-inicial.md)
 > e permanece **não iniciado por especialista**.
 
+> 🎲 **Regra de negócio em aberto (não é DEC):** o comportamento com **acervo
+> ativo insuficiente** — [`RN-SEL-003`](02-regras-de-negocio.md) (**PENDENTE**:
+> erro vs. rodada menor) — recebeu, na fatia de rodada (`src/modules/round`),
+> apenas uma **HIPÓTESE técnica provisória e reversível**: a criação **falha
+> antes de persistir** (`InsufficientActiveContentError`). A decisão de produto
+> continua **em aberto** e deve ser levada ao orquestrador. De forma relacionada,
+> `RN-SEL-002` (não repetir charadas) permanece **HIPÓTESE**, atendida como
+> consequência da seleção **sem reposição**.
+
 ## Referências cruzadas
 
 - [Pacote de decisões do MVP](13-pacote-decisoes-mvp.md)
