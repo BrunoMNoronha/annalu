@@ -25,9 +25,9 @@ function url(
 describe('databaseNameFromUrl', () => {
   it('extrai apenas o database do pathname (ignora query)', () => {
     expect(databaseNameFromUrl(url('annalu_test'))).toBe('annalu_test');
-    expect(databaseNameFromUrl(url('annalu_prod', { query: 'schema=public' }))).toBe(
-      'annalu_prod',
-    );
+    expect(
+      databaseNameFromUrl(url('annalu_prod', { query: 'schema=public' })),
+    ).toBe('annalu_prod');
   });
 
   it('retorna vazio para URL inválida', () => {
@@ -79,9 +79,9 @@ describe('assertSeedDatabase — deve rejeitar entradas não-teste/ inválidas',
   });
 
   it('protocolo não-PostgreSQL', () => {
-    expect(() => assertSeedDatabase('mysql://u:p@localhost:3306/annalu_test')).toThrow(
-      /protocol/i,
-    );
+    expect(() =>
+      assertSeedDatabase('mysql://u:p@localhost:3306/annalu_test'),
+    ).toThrow(/protocol/i);
   });
 });
 
