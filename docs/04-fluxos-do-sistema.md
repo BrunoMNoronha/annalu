@@ -72,8 +72,14 @@ stateDiagram-v2
     Cancelada --> [*]
 ```
 
-> `Expirada` e `Cancelada` são `HIPÓTESE`. O comportamento exato ao expirar é
-> `PENDENTE` (ver [regras de negócio](02-regras-de-negocio.md), `RN-TMP`).
+> **`Expirada` é CONFIRMADO** (DEC-009; `RN-TMP-002/003/004`; `RN-EXP-001..005`):
+> o **servidor é a autoridade do tempo** e a rodada expira ao atingir o limite. A
+> transição temporal `EmAndamento → Expirada` (`IN_PROGRESS → EXPIRED`) já é
+> aplicada de forma **atômica** no backend, com `endedAt = expiresAt` (nunca o
+> relógio de detecção) — ver `src/modules/round` (`expireRoundIfDue`). Os
+> **efeitos** sobre respostas/imagens ao expirar (`RN-EXP-002..005`) são regras
+> confirmadas, mas dependem de módulos futuros (`PlayerAnswer`/upload). `Cancelada`
+> permanece **`HIPÓTESE`** (`RN-CAN`, não implementada nesta fatia).
 
 ## 4. Estados de uma resposta (`PlayerAnswer`)
 

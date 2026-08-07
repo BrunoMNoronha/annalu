@@ -55,14 +55,14 @@
 > DEC-018) está registrado como HIST-SEC-006 no [backlog](11-backlog-inicial.md)
 > e permanece **não iniciado por especialista**.
 
-> 🎲 **Regra de negócio em aberto (não é DEC):** o comportamento com **acervo
-> ativo insuficiente** — [`RN-SEL-003`](02-regras-de-negocio.md) (**PENDENTE**:
-> erro vs. rodada menor) — recebeu, na fatia de rodada (`src/modules/round`),
-> apenas uma **HIPÓTESE técnica provisória e reversível**: a criação **falha
-> antes de persistir** (`InsufficientActiveContentError`). A decisão de produto
-> continua **em aberto** e deve ser levada ao orquestrador. De forma relacionada,
-> `RN-SEL-002` (não repetir charadas) permanece **HIPÓTESE**, atendida como
-> consequência da seleção **sem reposição**.
+> 🎲 **Regra de negócio resolvida (não é DEC):**
+> [`RN-SEL-003`](02-regras-de-negocio.md) (acervo elegível insuficiente) foi
+> **CONFIRMADA** pelo orquestrador: se houver menos charadas elegíveis que
+> `challengesPerRound`, a criação **falha** sem persistir sessão ou desafios
+> parciais (`InsufficientActiveContentError`) — **não** existe rodada menor
+> (coerente com RN-ROD-001). Deixa de ser decisão em aberto. De forma
+> relacionada, `RN-SEL-002` (não repetir charadas) **permanece HIPÓTESE**,
+> atendida como consequência da seleção **sem reposição**.
 
 ## Referências cruzadas
 
