@@ -9,6 +9,7 @@ import type {
   StartGameSessionInput,
 } from '@/modules/round';
 import { PlayerNotFoundError } from '@/modules/round';
+import { expireDueSql } from '@/infrastructure/prisma/round/expire-due';
 
 interface SessionChallengeRow {
   id: string;
@@ -140,19 +141,14 @@ export class PrismaGameSessionRepository implements GameSessionRepository {
   async expireIfDue(
     input: ExpireGameSessionInput,
   ): Promise<GameSession | null> {
-    // Compare-and-set atômico: transiciona IN_PROGRESS → EXPIRED apenas se
-    // vencida (`expires_at <= now`), gravando `ended_at = expires_at` no nível
-    // do banco (nunca o relógio de detecção). SQL cru porque `SET col = col`
-    // não é expressável pelo `updateMany` do Prisma.
-    const affected = await this.prisma.$executeRaw`
-      UPDATE "game_sessions"
-      SET "status" = 'EXPIRED'::"GameSessionStatus",
-          "ended_at" = "expires_at",
-          "updated_at" = now()
-      WHERE "id" = ${input.sessionId}::uuid
-        AND "status" = 'IN_PROGRESS'::"GameSessionStatus"
-        AND "expires_at" <= ${input.now}
-    `;
+    // Compare-and-set atômico compartilhado (mesma regra usada na gravação de
+    // rascunho): transiciona IN_PROGRESS → EXPIRED apenas se vencida, gravando
+    // `ended_at = expires_at` (nunca o relógio de detecção).
+    const affected = await expireDueSql(
+      this.prisma,
+      input.sessionId,
+      input.now,
+    );
     if (affected === 0) {
       return null;
     }

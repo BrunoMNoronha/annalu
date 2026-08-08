@@ -103,6 +103,32 @@
     **não** remove o desafio da rodada já criada — a leitura respeita os
     `SessionChallenge` persistidos (sem reexecutar sorteio nem filtrar pelo status
     atual do catálogo).
+- **Rascunho de resposta (`saveAnswerDraft`) — texto literal + coordenação com a
+  expiração:** testes unitários em `src/modules/round/**` e integração em
+  [`tests/integration/prisma/player-answer-draft.test.ts`](../tests/integration/prisma/player-answer-draft.test.ts):
+  - **Criação/atualização (`DRAFT`):** primeira gravação cria `PlayerAnswer`
+    (`state = DRAFT`, `submittedAt = null`); gravações seguintes **atualizam a
+    mesma linha** (mesmo `id`, `sessionChallengeId @unique` ⇒ **uma por desafio**).
+  - **Texto literal:** persiste exatamente o recebido — sem `trim`/lowercase/
+    acento/colapso de espaços; texto **incorreto** é armazenado (sem consultar
+    `AcceptedAnswer`/`Word.text` nem calcular correção); **string vazia** (`""`) é
+    válida (limpa o campo).
+  - **Boundary temporal:** só edita com a sessão `IN_PROGRESS` e `serverNow <
+    expiresAt`; `serverNow == expiresAt` (inclusivo) e depois **rejeitam**;
+    `CREATED`/`EXPIRED`/`COMPLETED`/`CANCELLED` **rejeitam**. O `Clock` (servidor)
+    é consultado **uma vez** por chamada (fake nos unitários).
+  - **Coordenação save × expiração (crítico):** a validação de editabilidade e o
+    `upsert` ocorrem na **mesma transação sob `SELECT ... FOR UPDATE`** da linha da
+    `GameSession`; a expiração disputa o mesmo lock. Testado: rodada vencida embora
+    persistida `IN_PROGRESS` **não** recebe texto e fica `EXPIRED` (`endedAt =
+    expiresAt`); corrida save × expire deixa o banco **consistente**.
+  - **Concorrência entre saves:** duas gravações simultâneas do mesmo desafio
+    deixam **exatamente uma** linha (sem violação de unicidade); o valor final é um
+    dos processamentos (os testes não dependem de qual vence).
+  - **`SessionChallenge.state` inalterado**; desafio de outra sessão é rejeitado.
+  - **Readback / minimização:** o `getRoundState` restaura o rascunho por desafio
+    (`answer`), distinguindo **ausência** (`null`) de **`DRAFT` vazio** (`""`); a
+    projeção continua **sem** palavra-alvo/respostas aceitas/PII (`select` mínimo).
 - **Fontes de aleatoriedade:** a regra usa a abstração `RandomSource` (injeção);
   testes usam `sequenceRandom` (sequência fixa). **Evitar** testes frágeis
   baseados em distribuição estatística de `Math.random()`.

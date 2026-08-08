@@ -62,3 +62,37 @@ export class InvalidGameSessionStateTransitionError extends RoundError {
     super(`Invalid game session state transition: ${from} -> ${to}.`);
   }
 }
+
+/**
+ * A rodada não pode ser editada no estado atual (não está `IN_PROGRESS` dentro
+ * do prazo). NUNCA inclui o texto da resposta na mensagem.
+ */
+export class GameSessionNotEditableError extends RoundError {
+  constructor(readonly status: string) {
+    super(`Game session is not editable in its current state: ${status}.`);
+  }
+}
+
+/** O `SessionChallenge` informado não existe. */
+export class SessionChallengeNotFoundError extends RoundError {
+  constructor(id: string) {
+    super(`Session challenge not found: ${id}`);
+  }
+}
+
+/** O `SessionChallenge` não pertence à `GameSession` informada. */
+export class SessionChallengeMismatchError extends RoundError {
+  constructor() {
+    super('Session challenge does not belong to the given session.');
+  }
+}
+
+/**
+ * A resposta existente não está em `DRAFT` (não pode ser sobrescrita nesta
+ * fatia). Expõe apenas o estado — NUNCA o texto da resposta.
+ */
+export class PlayerAnswerNotDraftError extends RoundError {
+  constructor(readonly state: string) {
+    super(`Player answer is not editable (state: ${state}).`);
+  }
+}

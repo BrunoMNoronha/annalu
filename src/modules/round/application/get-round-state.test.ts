@@ -23,9 +23,27 @@ const EXPIRES_AT = new Date('2026-08-07T12:10:00.000Z');
 
 function challengeViews(): RoundStateChallengeView[] {
   return [
-    { challengeId: 'c-1', position: 1, state: 'PENDING', prompt: 'O que é?' },
-    { challengeId: 'c-2', position: 2, state: 'PENDING', prompt: 'Adivinhe' },
-    { challengeId: 'c-3', position: 3, state: 'PENDING', prompt: 'Qual?' },
+    {
+      challengeId: 'c-1',
+      position: 1,
+      state: 'PENDING',
+      prompt: 'O que é?',
+      answer: null,
+    },
+    {
+      challengeId: 'c-2',
+      position: 2,
+      state: 'PENDING',
+      prompt: 'Adivinhe',
+      answer: { answerId: 'a-2', answerText: '', state: 'DRAFT' },
+    },
+    {
+      challengeId: 'c-3',
+      position: 3,
+      state: 'PENDING',
+      prompt: 'Qual?',
+      answer: { answerId: 'a-3', answerText: ' Bola ', state: 'DRAFT' },
+    },
   ];
 }
 
@@ -289,6 +307,7 @@ describe('getRoundState', () => {
     ];
     for (const challenge of result.challenges) {
       expect(Object.keys(challenge).sort()).toEqual([
+        'answer',
         'challengeId',
         'position',
         'prompt',
@@ -301,6 +320,29 @@ describe('getRoundState', () => {
     for (const key of [...forbidden, 'playerId', 'configurationId']) {
       expect(result).not.toHaveProperty(key);
     }
+  });
+
+  it('23/24/25. readback do rascunho: null vs DRAFT vazio vs texto literal', async () => {
+    const store = new FakeStore(gameSession());
+    const result = await getRoundState(
+      {
+        sessions: store,
+        roundStates: store,
+        clock: countingClock(new Date(EXPIRES_AT.getTime() - 1)).clock,
+      },
+      { sessionId: 'session-1' },
+    );
+    // c-1 sem resposta → null; c-2 DRAFT vazio → ""; c-3 DRAFT com texto literal.
+    expect(result.challenges[0]?.answer).toBeNull();
+    expect(result.challenges[1]?.answer).toEqual({
+      answerId: 'a-2',
+      answerText: '',
+      state: 'DRAFT',
+    });
+    expect(result.challenges[2]?.answer?.answerText).toBe(' Bola ');
+    // Ausência de resposta é distinta de DRAFT vazio.
+    expect(result.challenges[0]?.answer).toBeNull();
+    expect(result.challenges[1]?.answer).not.toBeNull();
   });
 
   it('15. uma única referência temporal autoritativa por consulta', async () => {
