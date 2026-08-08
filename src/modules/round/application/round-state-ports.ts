@@ -1,4 +1,5 @@
 import type { GameSessionStatus } from '@/modules/round/domain/game-session';
+import type { PlayerAnswerState } from '@/modules/round/domain/player-answer-state';
 import type { SessionChallengeState } from '@/modules/round/domain/session-challenge-state';
 
 /**
@@ -14,12 +15,25 @@ import type { SessionChallengeState } from '@/modules/round/domain/session-chall
  * dados "só porque estão no relacionamento").
  */
 
+/**
+ * Rascunho da resposta da criança, para **restaurar** o texto (reload/retomada).
+ * `answerText` é literal e pode ser `""`. Distingue-se de "sem resposta"
+ * (`answer = null`).
+ */
+export interface RoundStateAnswerView {
+  readonly answerId: string;
+  readonly answerText: string;
+  readonly state: PlayerAnswerState;
+}
+
 /** Desafio da rodada visível ao jogador (apenas o enunciado, sem a solução). */
 export interface RoundStateChallengeView {
   readonly challengeId: string;
   readonly position: number;
   readonly state: SessionChallengeState;
   readonly prompt: string;
+  /** Rascunho persistido, ou `null` quando ainda não há resposta. */
+  readonly answer: RoundStateAnswerView | null;
 }
 
 /**
