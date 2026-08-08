@@ -96,6 +96,12 @@
 | RNF-PERF-002 | O upload tolera conexões lentas e informa progresso. | CONFIRMADO |
 | RNF-PERF-003 | O estado da rodada é preservado diante de instabilidade (salvamento progressivo). | HIPÓTESE |
 
+> Rastreabilidade (RNF-PERF-003): já existe **capacidade de backend** para salvar
+> o rascunho textual da resposta (`saveAnswerDraft` em `src/modules/round`, texto
+> literal por desafio). A **política/cadência de autosave da UI** (debounce, envio
+> fora de ordem, versionamento) permanece **`HIPÓTESE`** — a decidir junto ao
+> contrato HTTP/UI; **não** promovida por esta fatia.
+
 ### Experiência (`RNF-UX`)
 
 | Código | Requisito | Origem |
