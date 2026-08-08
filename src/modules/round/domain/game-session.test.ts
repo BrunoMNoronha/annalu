@@ -3,6 +3,7 @@ import {
   assertCanStart,
   computeExpiresAt,
   isExpiredAt,
+  remainingMilliseconds,
   type GameSessionStatus,
 } from '@/modules/round/domain/game-session';
 import { InvalidGameSessionStateTransitionError } from '@/modules/round/domain/errors';
@@ -59,5 +60,40 @@ describe('isExpiredAt', () => {
     expect(isExpiredAt(expiresAt, new Date(expiresAt.getTime() + 1))).toBe(
       true,
     );
+  });
+});
+
+describe('remainingMilliseconds', () => {
+  const expiresAt = new Date('2026-08-07T12:10:00.000Z');
+
+  it('IN_PROGRESS antes do prazo → max(0, expiresAt - serverNow)', () => {
+    expect(
+      remainingMilliseconds(
+        'IN_PROGRESS',
+        expiresAt,
+        new Date(expiresAt.getTime() - 5000),
+      ),
+    ).toBe(5000);
+  });
+
+  it('IN_PROGRESS após o prazo → 0 (nunca negativo)', () => {
+    expect(
+      remainingMilliseconds(
+        'IN_PROGRESS',
+        expiresAt,
+        new Date(expiresAt.getTime() + 5000),
+      ),
+    ).toBe(0);
+  });
+
+  it('EXPIRED → 0', () => {
+    expect(remainingMilliseconds('EXPIRED', expiresAt, expiresAt)).toBe(0);
+  });
+
+  it('CREATED/COMPLETED/CANCELLED → null', () => {
+    const statuses: GameSessionStatus[] = ['CREATED', 'COMPLETED', 'CANCELLED'];
+    for (const status of statuses) {
+      expect(remainingMilliseconds(status, expiresAt, expiresAt)).toBeNull();
+    }
   });
 });

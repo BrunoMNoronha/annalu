@@ -77,6 +77,32 @@
     estado final consistente.
   - **Estados incompatíveis:** `CREATED`/`COMPLETED`/`CANCELLED` **não** expiram
     (estados terminais não são reabertos).
+- **Consulta do estado da rodada (`getRoundState`) — leitura + expiração sob
+  demanda:** testes unitários em `src/modules/round/**` e integração em
+  [`tests/integration/prisma/round-state-query.test.ts`](../tests/integration/prisma/round-state-query.test.ts):
+  - **Expiração sob demanda:** a consulta aplica a expiração (reusando a regra
+    concorrente-segura) **antes** do estado observável — uma rodada vencida nunca
+    é lida como `IN_PROGRESS`. Cobre boundary (`serverNow < / == / > expiresAt`),
+    persistência de `endedAt = expiresAt` e **consulta concorrente** no instante
+    vencido (estado final consistente).
+  - **Uma única referência temporal por consulta:** um `serverNow` autoritativo
+    (via `Clock`, consultado **uma vez**) orienta expiração, `serverNow` e o
+    tempo restante (`remainingMilliseconds`, precisão em ms — sem arredondamento
+    de apresentação): `IN_PROGRESS` → `max(0, expiresAt − serverNow)`; `EXPIRED`
+    → `0`; `CREATED`/`COMPLETED`/`CANCELLED` → `null`. Relógio **fake** nos
+    unitários.
+  - **Ordenação e conteúdo:** desafios ordenados por `position` ASC, com
+    `Riddle.prompt`; a consulta **não** inicia/completa/cancela a sessão nem
+    altera `SessionChallenge`.
+  - **Minimização de dados (crítico):** o read model do jogador **nunca** expõe
+    `Word.text` (palavra-alvo), `AcceptedAnswer` (respostas aceitas), PII do
+    jogador/responsável, credenciais nem `configurationId`/`playerId` — garantido
+    pelo `select` mínimo do Prisma (só `Riddle.prompt`) e verificado por teste de
+    contrato.
+  - **Conteúdo desativado após a criação:** desativar a `Word`/`Riddle` depois
+    **não** remove o desafio da rodada já criada — a leitura respeita os
+    `SessionChallenge` persistidos (sem reexecutar sorteio nem filtrar pelo status
+    atual do catálogo).
 - **Fontes de aleatoriedade:** a regra usa a abstração `RandomSource` (injeção);
   testes usam `sequenceRandom` (sequência fixa). **Evitar** testes frágeis
   baseados em distribuição estatística de `Math.random()`.

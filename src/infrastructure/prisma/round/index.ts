@@ -4,3 +4,4 @@
  * domínio.
  */
 export { PrismaGameSessionRepository } from '@/infrastructure/prisma/round/prisma-game-session-repository';
+export { PrismaRoundStateQueryRepository } from '@/infrastructure/prisma/round/prisma-round-state-query-repository';

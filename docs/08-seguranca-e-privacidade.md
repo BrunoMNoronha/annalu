@@ -31,6 +31,15 @@
 - Evitar nome completo, documentos, endereço, geolocalização e qualquer dado não
   essencial.
 - Preferir apelidos/identificadores não sensíveis para o jogador.
+- **Projeção da rodada para o jogador (`getRoundState`):** aplica minimização de
+  dados — retorna somente o necessário à experiência (estado, tempos, e por
+  desafio `id`/`position`/`state` + `Riddle.prompt`). A **palavra-alvo**
+  (`Word.text`) e as **respostas aceitas** (`AcceptedAnswer`) **nunca** devem ser
+  expostas pelo contrato do jogador; a garantia começa no `select` mínimo do
+  Prisma (não carregar esses dados). Também não expõe PII do jogador/responsável
+  nem credenciais. O **futuro** route handler que expuser essa projeção **depende
+  de autenticação/autorização do jogador** (resolver o jogador autenticado e
+  verificar acesso à sessão antes de responder).
 
 ## 4. Fotografias
 
