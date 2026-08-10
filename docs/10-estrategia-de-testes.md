@@ -121,7 +121,13 @@
     `upsert` ocorrem na **mesma transação sob `SELECT ... FOR UPDATE`** da linha da
     `GameSession`; a expiração disputa o mesmo lock. Testado: rodada vencida embora
     persistida `IN_PROGRESS` **não** recebe texto e fica `EXPIRED` (`endedAt =
-    expiresAt`); corrida save × expire deixa o banco **consistente**.
+    expiresAt`). Na corrida `save` (antes do prazo) × `expire` (após o prazo), a
+    expiração **sempre** conclui e o estado final é **sempre `EXPIRED`** com
+    `endedAt = expiresAt`, independentemente de quem adquira o lock primeiro: se o
+    `save` vence, persiste **exatamente uma** resposta com o texto literal e a
+    expiração ocorre em seguida; se a expiração vence, o `save` observa `EXPIRED` e
+    **rejeita** (`GameSessionNotEditableError`) sem persistir resposta. Nunca resta
+    `IN_PROGRESS` nem mais de uma linha.
   - **Concorrência entre saves:** duas gravações simultâneas do mesmo desafio
     deixam **exatamente uma** linha (sem violação de unicidade); o valor final é um
     dos processamentos (os testes não dependem de qual vence).

@@ -278,12 +278,14 @@ describe('saveAnswerDraft — estados e prazo', () => {
 });
 
 describe('saveAnswerDraft — concorrência', () => {
-  it('18. corrida save × expire deixa o banco consistente', async () => {
+  it('18. corrida save × expire termina EXPIRED, vença quem vencer o lock', async () => {
     await seedContent();
     const { sessionId, expiresAt, challengeIds } = await startedRound();
     const challengeId = challengeIds[0]!;
 
-    const results = await Promise.allSettled([
+    // `save` observa a sessão ANTES do prazo (editável); `expireIfDue` observa
+    // DEPOIS do prazo. Ambos disputam o lock da linha da `GameSession`.
+    const [saveResult, expireResult] = await Promise.allSettled([
       saveAnswerDraft(
         saveDeps(fixedClock(new Date(expiresAt.getTime() - 1000))),
         {
@@ -297,19 +299,48 @@ describe('saveAnswerDraft — concorrência', () => {
         now: new Date(expiresAt.getTime() + 1000),
       }),
     ]);
-    expect(results[0]?.status).toBeDefined();
 
+    // A expiração roda com `now > expiresAt` e `save` nunca altera o status; logo,
+    // qualquer que seja a ordem de aquisição do lock, a expiração SEMPRE conclui
+    // e transiciona a sessão. Não pode restar `IN_PROGRESS`.
+    expect(expireResult.status).toBe('fulfilled');
+    if (expireResult.status !== 'fulfilled') {
+      throw expireResult.reason;
+    }
+    expect(expireResult.value).not.toBeNull();
+    expect(expireResult.value?.status).toBe('EXPIRED');
+    expect(expireResult.value?.endedAt?.getTime()).toBe(expiresAt.getTime());
+
+    // Estado final sob o lock: sempre EXPIRED, com `endedAt = expiresAt` (relógio
+    // do prazo, nunca o de detecção `expiresAt + 1000`).
     const session = await prisma.gameSession.findUnique({
       where: { id: sessionId },
     });
-    const answers = await prisma.playerAnswer.count({
+    expect(session?.status).toBe('EXPIRED');
+    expect(session?.endedAt?.getTime()).toBe(expiresAt.getTime());
+
+    const rows = await prisma.playerAnswer.findMany({
       where: { sessionChallengeId: challengeId },
     });
-    // Estado final consistente: no máximo uma resposta; se EXPIRED, endedAt correto.
-    expect(answers).toBeLessThanOrEqual(1);
-    expect(['IN_PROGRESS', 'EXPIRED']).toContain(session?.status);
-    if (session?.status === 'EXPIRED') {
-      expect(session.endedAt?.getTime()).toBe(expiresAt.getTime());
+    // Nunca mais de uma resposta, em qualquer interleaving.
+    expect(rows.length).toBeLessThanOrEqual(1);
+
+    if (saveResult.status === 'fulfilled') {
+      // `save` venceu o lock: rascunho persistido LITERALMENTE antes da expiração.
+      expect(rows).toHaveLength(1);
+      expect(rows[0]?.answerText).toBe('antes');
+      expect(rows[0]?.state).toBe('DRAFT');
+      // O valor retornado reflete o que foi persistido.
+      expect(saveResult.value.answerText).toBe('antes');
+      expect(saveResult.value.state).toBe('DRAFT');
+    } else {
+      // A expiração venceu o lock: `save` observa EXPIRED sob o lock e rejeita com
+      // o erro de sessão não editável do domínio — sem persistir resposta alguma.
+      expect(saveResult.reason).toBeInstanceOf(GameSessionNotEditableError);
+      expect((saveResult.reason as GameSessionNotEditableError).status).toBe(
+        'EXPIRED',
+      );
+      expect(rows).toHaveLength(0);
     }
   });
 
