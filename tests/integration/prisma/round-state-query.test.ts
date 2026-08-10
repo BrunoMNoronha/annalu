@@ -144,11 +144,13 @@ describe('getRoundState — carga e ordenação', () => {
     expect(state).not.toHaveProperty('configurationId');
     for (const challenge of state.challenges) {
       expect(Object.keys(challenge).sort()).toEqual([
+        'answer',
         'challengeId',
         'position',
         'prompt',
         'state',
       ]);
+      expect(challenge.answer).toBeNull();
     }
   });
 });

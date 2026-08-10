@@ -37,6 +37,10 @@ export class PrismaRoundStateQueryRepository implements RoundStateQueryRepositor
             state: true,
             // Apenas o enunciado — NUNCA word/acceptedAnswers.
             riddle: { select: { prompt: true } },
+            // Rascunho para restauração — só id/texto/estado (sem imagem/avaliação).
+            playerAnswer: {
+              select: { id: true, answerText: true, state: true },
+            },
           },
         },
       },
@@ -55,6 +59,13 @@ export class PrismaRoundStateQueryRepository implements RoundStateQueryRepositor
         position: challenge.position,
         state: challenge.state,
         prompt: challenge.riddle.prompt,
+        answer: challenge.playerAnswer
+          ? {
+              answerId: challenge.playerAnswer.id,
+              answerText: challenge.playerAnswer.answerText,
+              state: challenge.playerAnswer.state,
+            }
+          : null,
       })),
     };
   }

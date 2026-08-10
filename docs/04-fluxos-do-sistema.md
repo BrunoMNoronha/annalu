@@ -93,8 +93,18 @@ stateDiagram-v2
     EmAvaliacao --> [*]
 ```
 
-> `Rascunho`/`Descartada` dependem de salvamento progressivo (`HIPÓTESE`) e de
-> permitir pular charada (`HIPÓTESE`).
+> **`Rascunho` (DRAFT) textual tem suporte de backend** (`saveAnswerDraft` em
+> `src/modules/round`): o texto digitado é **persistido literalmente** (sem
+> normalização/correção), com no máximo **um `PlayerAnswer` por desafio**, editável
+> apenas enquanto a rodada estiver `IN_PROGRESS` dentro do prazo; após a expiração
+> (servidor é a autoridade), **novas alterações são bloqueadas** e o texto já salvo
+> permanece persistido. As **demais transições não estão implementadas**:
+> `ComImagem`/`Enviada`/`EmAvaliacao` (dependem de imagem/submissão/avaliação) e a
+> classificação `DRAFT → PRESERVED_AFTER_EXPIRATION` (depende do estado futuro de
+> `SubmittedImage`, `RN-EXP-002..005`). **Pular** é **CONFIRMADO** (DEC-008 /
+> `RN-PUL-001..003`; estado `pulado`, zero ponto, sem troca), mas **não** foi
+> implementado nesta fatia. A cadência/política de autosave da UI permanece
+> **`HIPÓTESE`** (`RNF-PERF-003`).
 
 ## 5. Estados de uma avaliação (`Evaluation`)
 

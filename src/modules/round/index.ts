@@ -28,6 +28,10 @@ export {
   type RoundState,
   type GetRoundStateDependencies,
 } from '@/modules/round/application/get-round-state';
+export {
+  saveAnswerDraft,
+  type SaveAnswerDraftDependencies,
+} from '@/modules/round/application/save-answer-draft';
 
 // Ports (para adapters e testes)
 export type {
@@ -40,7 +44,12 @@ export type {
   RoundStateQueryRepository,
   RoundStateProjection,
   RoundStateChallengeView,
+  RoundStateAnswerView,
 } from '@/modules/round/application/round-state-ports';
+export type {
+  PlayerAnswerDraftRepository,
+  SaveAnswerDraftInput,
+} from '@/modules/round/application/player-answer-ports';
 
 // Domínio — rodada
 export type {
@@ -55,6 +64,13 @@ export {
   remainingMilliseconds,
 } from '@/modules/round/domain/game-session';
 export type { SessionChallengeState } from '@/modules/round/domain/session-challenge-state';
+export type { PlayerAnswer } from '@/modules/round/domain/player-answer';
+export {
+  classifyDraftEditability,
+  assertPlayerAnswerDraft,
+  type DraftEditability,
+} from '@/modules/round/domain/player-answer';
+export type { PlayerAnswerState } from '@/modules/round/domain/player-answer-state';
 
 // Domínio — seleção de desafios (funções puras)
 export type {
@@ -74,4 +90,8 @@ export {
   PlayerNotFoundError,
   GameSessionNotFoundError,
   InvalidGameSessionStateTransitionError,
+  GameSessionNotEditableError,
+  SessionChallengeNotFoundError,
+  SessionChallengeMismatchError,
+  PlayerAnswerNotDraftError,
 } from '@/modules/round/domain/errors';
